@@ -13,25 +13,43 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #070a12;
+      color: #c9d1d9;
+    }
+    
     body { 
-      background: #070a12; 
-      color: #c9d1d9; 
-      min-height: 100vh;
       display: flex;
       justify-content: center;
     }
 
+    /* 컨테이너: 모바일에서는 꽉 차고, PC에서는 조합 5개가 한 줄로 들어가는 넉넉한 720px */
     .app-container {
       width: 100%;
-      max-width: 500px;
+      max-width: 720px;
+      height: 100%;
       background: #0b0f19;
-      padding: 14px 12px 60px 12px;
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       border-left: 1px solid #162032;
       border-right: 1px solid #162032;
+      position: relative;
+    }
+
+    /* 상단 틀고정 고정 영역 */
+    .fixed-header-section {
+      flex-shrink: 0;
+      padding: 14px 14px 12px 14px;
+      background: #0b0f19;
+      z-index: 100;
+      border-bottom: 2px solid #1e293f;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
     }
     
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    /* 상단 헤더 */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
     .header-btns { display: flex; gap: 6px; align-items: center; }
     
@@ -40,15 +58,28 @@
     
     .btn-main { width: 68px; background: #1a2438; border: 1px solid #2b3a58; color: #79c0ff; }
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
-
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
-    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 16px; }
+    /* 조합 카드 그리드: 모바일(기본)은 3열 */
+    .cards-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 6px; 
+    }
+
+    /* PC / 태블릿 (화면 너비 580px 이상): 조합 5개가 한 줄에 5열로 나란히 배치 */
+    @media (min-width: 580px) {
+      .cards-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+    }
+
     .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 8px 6px; text-align: left; transition: all 0.25s ease; position: relative; }
     
     .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .card-title { font-size: 0.8rem; font-weight: bold; }
-    .card-status { font-size: 0.7rem; color: #8b949e; }
+    .card-title { font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
+    .card-status { font-size: 0.7rem; color: #8b949e; white-space: nowrap; }
     
     .card-mid { display: flex; align-items: baseline; justify-content: space-between; }
     .card-odds { font-size: 0.95rem; font-weight: bold; color: #fff; }
@@ -67,15 +98,27 @@
     .card.all-win { background: #1a4731; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
     .card.all-win .card-status { color: #34d399; font-weight: bold; }
 
+    /* 스크롤 가능한 경기 목록 영역 */
+    .scrollable-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 14px 60px 14px;
+    }
+    
+    .scrollable-body::-webkit-scrollbar { width: 6px; }
+    .scrollable-body::-webkit-scrollbar-thumb { background: #1e293f; border-radius: 4px; }
+    .scrollable-body::-webkit-scrollbar-track { background: transparent; }
+
     .match-list { display: flex; flex-direction: column; gap: 10px; }
-    .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 10px 12px; }
+    .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; }
     
     .match-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .match-meta { font-size: 0.75rem; color: #7d8590; display: flex; align-items: center; gap: 6px; }
+    .match-meta { font-size: 0.78rem; color: #7d8590; display: flex; align-items: center; gap: 6px; }
     .badge-type { background: #1c263c; color: #58a6ff; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 0.68rem; }
     
     .combs-badge-wrap { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-    .c-badge { width: 17px; height: 17px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; color: #fff; }
+    .c-badge { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: bold; color: #fff; }
     .bg-c1 { background: #00b4d8; }
     .bg-c2 { background: #06d6a0; }
     .bg-c3 { background: #b5179e; }
@@ -83,17 +126,17 @@
     .bg-c5 { background: #ffd166; color: #111; }
     .bg-c6 { background: #ec4899; }
 
-    .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-weight: bold; }
-    .team-home { flex: 1; font-size: 0.95rem; text-align: left; color: #f0f6fc; }
+    .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; font-weight: bold; }
+    .team-home { flex: 1; font-size: 0.98rem; text-align: left; color: #f0f6fc; }
     .vs-text { font-size: 0.75rem; color: #6e7681; margin: 0 10px; }
-    .team-away { flex: 1; font-size: 0.95rem; text-align: right; color: #f0f6fc; }
+    .team-away { flex: 1; font-size: 0.98rem; text-align: right; color: #f0f6fc; }
 
     .bet-bottom-row { display: flex; align-items: center; gap: 8px; }
     
-    .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1.1; }
-    .bet-slot { background: #0c121e; border: 1px solid #1a253a; border-radius: 6px; height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1.1; }
+    .bet-slot { background: #0c121e; border: 1px solid #1a253a; border-radius: 6px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .slot-label { font-size: 0.7rem; color: #525f7a; }
-    .slot-odd { font-size: 0.8rem; color: #525f7a; font-weight: bold; }
+    .slot-odd { font-size: 0.82rem; color: #525f7a; font-weight: bold; }
 
     .bet-slot.my-pick { border-width: 1.5px; border-color: #2563eb; background: #112240; }
     .bet-slot.my-pick .slot-label { color: #93c5fd; font-weight: bold; }
@@ -107,9 +150,9 @@
     .bet-slot.my-pick.is-fail .slot-label { color: #fecdd3; }
     .bet-slot.my-pick.is-fail .slot-odd { color: #fb7185; }
 
-    .status-btns-group { display: flex; gap: 3px; flex: 0.9; }
-    .btn-status { height: 42px; border-radius: 6px; font-weight: bold; font-size: 0.75rem; border: 1px solid #23314f; background: #131b2e; color: #64748b; cursor: pointer; flex: 1; transition: all 0.2s ease; }
-    .btn-status.btn-wait { flex: 0.75; font-size: 0.7rem; }
+    .status-btns-group { display: flex; gap: 4px; flex: 0.9; }
+    .btn-status { height: 44px; border-radius: 6px; font-weight: bold; font-size: 0.78rem; border: 1px solid #23314f; background: #131b2e; color: #64748b; cursor: pointer; flex: 1; transition: all 0.2s ease; }
+    .btn-status.btn-wait { flex: 0.75; font-size: 0.72rem; }
 
     .btn-status.active-hit { background: #059669 !important; border-color: #34d399 !important; color: #fff !important; box-shadow: 0 0 12px #059669; }
     .btn-status.active-fail { background: #e11d48 !important; border-color: #fb7185 !important; color: #fff !important; box-shadow: 0 0 12px #e11d48; }
@@ -119,39 +162,43 @@
 <body>
 
   <div class="app-container">
-    <div class="header">
-      <div class="title">프로토 130회차 트래커</div>
-      <div class="header-btns">
-        <button class="btn-action btn-main" onclick="simulateNext()">자동입력</button>
-        <button class="btn-action btn-reset" onclick="resetAll()">초기화</button>
-        <button class="btn-action btn-fs-icon" onclick="toggleFullscreen()" id="fsBtn" title="전체화면">⛶</button>
+    <div class="fixed-header-section">
+      <div class="header">
+        <div class="title">프로토 130회차 트래커</div>
+        <div class="header-btns">
+          <button class="btn-action btn-main" onclick="simulateNext()">자동입력</button>
+          <button class="btn-action btn-reset" onclick="resetAll()">초기화</button>
+          <button class="btn-action btn-fs-icon" onclick="toggleFullscreen()" id="fsBtn" title="전체화면">⛶</button>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div id="card-1" class="card c1 alive">
+          <div class="card-top"><span class="card-title">조합 1</span><span class="card-status" id="st-1">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">48.7배</span><span class="card-progress" id="prog-1">0/4</span></div>
+        </div>
+        <div id="card-2" class="card c2 alive">
+          <div class="card-top"><span class="card-title">조합 2</span><span class="card-status" id="st-2">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">50.3배</span><span class="card-progress" id="prog-2">0/5</span></div>
+        </div>
+        <div id="card-3" class="card c3 alive">
+          <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">49.7배</span><span class="card-progress" id="prog-3">0/5</span></div>
+        </div>
+        <div id="card-4" class="card c4 alive">
+          <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">13.9배</span><span class="card-progress" id="prog-4">0/4</span></div>
+        </div>
+        <div id="card-5" class="card c5 alive">
+          <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">71.7배</span><span class="card-progress" id="prog-5">0/4</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="cards-grid">
-      <div id="card-1" class="card c1 alive">
-        <div class="card-top"><span class="card-title">조합 1</span><span class="card-status" id="st-1">진행중</span></div>
-        <div class="card-mid"><span class="card-odds">48.7배</span><span class="card-progress" id="prog-1">0/4</span></div>
-      </div>
-      <div id="card-2" class="card c2 alive">
-        <div class="card-top"><span class="card-title">조합 2</span><span class="card-status" id="st-2">진행중</span></div>
-        <div class="card-mid"><span class="card-odds">50.3배</span><span class="card-progress" id="prog-2">0/5</span></div>
-      </div>
-      <div id="card-3" class="card c3 alive">
-        <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
-        <div class="card-mid"><span class="card-odds">49.7배</span><span class="card-progress" id="prog-3">0/5</span></div>
-      </div>
-      <div id="card-4" class="card c4 alive">
-        <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
-        <div class="card-mid"><span class="card-odds">13.9배</span><span class="card-progress" id="prog-4">0/4</span></div>
-      </div>
-      <div id="card-5" class="card c5 alive">
-        <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
-        <div class="card-mid"><span class="card-odds">71.7배</span><span class="card-progress" id="prog-5">0/4</span></div>
-      </div>
+    <div class="scrollable-body">
+      <div class="match-list" id="matchList"></div>
     </div>
-
-    <div class="match-list" id="matchList"></div>
   </div>
 
   <script>
