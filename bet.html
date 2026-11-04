@@ -57,10 +57,18 @@
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
+    /* 조합 카드 그리드: 모바일은 3열 2줄, PC/태블릿은 6열 1줄 */
     .cards-grid { 
       display: grid; 
       grid-template-columns: repeat(3, 1fr); 
       gap: 6px; 
+    }
+
+    @media (min-width: 580px) {
+      .cards-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+      }
     }
 
     .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 8px 6px; text-align: left; transition: all 0.25s ease; position: relative; }
@@ -70,7 +78,7 @@
     .card-status { font-size: 0.7rem; color: #8b949e; white-space: nowrap; }
 
     .card-mid { display: flex; align-items: baseline; justify-content: space-between; }
-    .card-odds { font-size: 0.95rem; font-weight: bold; color: #fff; }
+    .card-odds { font-size: 0.92rem; font-weight: bold; color: #fff; }
     .card-progress { font-size: 0.75rem; font-weight: bold; color: #64748b; }
     .card-progress.has-hit { color: #f8fafc; text-shadow: 0 0 6px rgba(255,255,255,0.4); }
     .card-progress.complete { color: #34d399; text-shadow: 0 0 8px #34d399; }
@@ -78,6 +86,9 @@
     .c1 .card-title { color: #00b4d8; } .c1.alive { border-color: #00b4d8; box-shadow: 0 0 10px rgba(0, 180, 216, 0.4); }
     .c2 .card-title { color: #06d6a0; } .c2.alive { border-color: #06d6a0; box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
     .c3 .card-title { color: #b5179e; } .c3.alive { border-color: #b5179e; box-shadow: 0 0 10px rgba(181, 23, 158, 0.4); }
+    .c4 .card-title { color: #f77f00; } .c4.alive { border-color: #f77f00; box-shadow: 0 0 10px rgba(247, 127, 0, 0.4); }
+    .c5 .card-title { color: #ffd166; } .c5.alive { border-color: #ffd166; box-shadow: 0 0 10px rgba(255, 209, 102, 0.4); }
+    .c6 .card-title { color: #ec4899; } .c6.alive { border-color: #ec4899; box-shadow: 0 0 10px rgba(236, 72, 153, 0.4); }
 
     .card.failed { opacity: 0.25; border-color: #23314f !important; text-decoration: line-through; box-shadow: none !important; }
     .card.failed .card-status { color: #f85149; }
@@ -107,6 +118,9 @@
     .bg-c1 { background: #00b4d8; }
     .bg-c2 { background: #06d6a0; }
     .bg-c3 { background: #b5179e; }
+    .bg-c4 { background: #f77f00; }
+    .bg-c5 { background: #ffd166; color: #111; }
+    .bg-c6 { background: #ec4899; }
 
     .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; font-weight: bold; }
     .team-home { flex: 1; font-size: 0.98rem; text-align: left; color: #f0f6fc; }
@@ -147,7 +161,7 @@
   <div class="app-container">
     <div class="fixed-header-section">
       <div class="header">
-        <div class="title">프로토 131회차</div>
+        <div class="title">프로토 131회차 트래커</div>
         <div class="header-btns">
           <button class="btn-action btn-main" onclick="simulateNext()">자동입력</button>
           <button class="btn-action btn-reset" onclick="resetAll()">초기화</button>
@@ -168,6 +182,18 @@
           <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
           <div class="card-mid"><span class="card-odds">5.4배</span><span class="card-progress" id="prog-3">0/3</span></div>
         </div>
+        <div id="card-4" class="card c4 alive">
+          <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">21.9배</span><span class="card-progress" id="prog-4">0/3</span></div>
+        </div>
+        <div id="card-5" class="card c5 alive">
+          <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">11.1배</span><span class="card-progress" id="prog-5">0/4</span></div>
+        </div>
+        <div id="card-6" class="card c6 alive">
+          <div class="card-top"><span class="card-title">조합 6</span><span class="card-status" id="st-6">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">47.7배</span><span class="card-progress" id="prog-6">0/5</span></div>
+        </div>
       </div>
     </div>
 
@@ -180,15 +206,20 @@
     const matches = [
       { id: "m1", time: "11.04 19:00", league: "ACLE", type: "승무패", home: "포항 스틸러스", away: "감바 오사카", pickTarget: "away", odd: "1.89", combs: [1, 2] },
       { id: "m2", time: "11.04 21:15", league: "ACLE", type: "승무패", home: "부리람 유나이티드", away: "가시마 앤틀러스", pickTarget: "away", odd: "1.89", combs: [1, 2, 3] },
-      { id: "m3", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "카디프 시티", away: "웨스트햄", pickTarget: "draw", odd: "3.85", combs: [1] },
-      { id: "m4", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "카디프 시티", away: "웨스트햄", pickTarget: "away", odd: "1.87", combs: [2] },
-      { id: "m5", time: "11.05 04:45", league: "챔피언십", type: "U/O 3.5", home: "카디프 시티", away: "웨스트햄", pickTarget: "under", odd: "1.69", combs: [3] },
-      { id: "m6", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "2.90", combs: [1] },
-      { id: "m7", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "1.67", combs: [3] },
-      { id: "m8", time: "11.05 05:00", league: "챔스", type: "승무패", home: "PSV에인트호번", away: "클뤼프 브뤼허", pickTarget: "home", odd: "1.95", combs: [1, 2] }
+      { id: "m3", time: "11.05 02:45", league: "UCL", type: "승무패", home: "페네르바체SK", away: "리버풀", pickTarget: "draw", odd: "4.30", combs: [6] },
+      { id: "m4", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "카디프 시티", away: "웨스트햄", pickTarget: "draw", odd: "3.85", combs: [1, 4] },
+      { id: "m5", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "카디프 시티", away: "웨스트햄", pickTarget: "away", odd: "1.87", combs: [2, 5, 6] },
+      { id: "m6", time: "11.05 04:45", league: "챔피언십", type: "U/O 3.5", home: "카디프 시티", away: "웨스트햄", pickTarget: "under", odd: "1.69", combs: [3] },
+      { id: "m7", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "2.90", combs: [1] },
+      { id: "m8", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "1.67", combs: [3] },
+      { id: "m9", time: "11.05 05:00", league: "UCL", type: "승무패", home: "PSV에인트호번", away: "클뤼프 브뤼허", pickTarget: "home", odd: "1.95", combs: [1, 2] },
+      { id: "m10", time: "11.05 05:00", league: "UCL", type: "승무패", home: "PSV에인트호번", away: "클뤼프 브뤼허", pickTarget: "home", odd: "1.83", combs: [5, 6] },
+      { id: "m11", time: "11.05 05:00", league: "UCL", type: "H+1.0", home: "RC랑스", away: "코모1907", pickTarget: "away", odd: "3.10", combs: [4] },
+      { id: "m12", time: "11.05 05:00", league: "UCL", type: "승무패", home: "RC랑스", away: "코모1907", pickTarget: "away", odd: "1.77", combs: [5, 6] },
+      { id: "m13", time: "11.06 02:45", league: "UEL", type: "H-1.0", home: "AC밀란", away: "페렌츠바로시TC", pickTarget: "home", odd: "1.83", combs: [4, 5, 6] }
     ];
 
-    const TOTAL_COMBS = 3;
+    const TOTAL_COMBS = 6;
     let state = JSON.parse(localStorage.getItem('proto_131_fix') || '{}');
 
     function render() {
