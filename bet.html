@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>프로토 130회차</title>
-  
+  <title>프로토 131회차</title>
+
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,20 +12,19 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    
+
     html, body {
       height: 100%;
       overflow: hidden;
       background: #070a12;
       color: #c9d1d9;
     }
-    
+
     body { 
       display: flex;
       justify-content: center;
     }
 
-    /* 컨테이너: 모바일에서는 꽉 차고, PC에서는 조합 5개가 한 줄로 들어가는 넉넉한 720px */
     .app-container {
       width: 100%;
       max-width: 720px;
@@ -38,7 +37,6 @@
       position: relative;
     }
 
-    /* 상단 틀고정 고정 영역 */
     .fixed-header-section {
       flex-shrink: 0;
       padding: 14px 14px 12px 14px;
@@ -47,84 +45,68 @@
       border-bottom: 2px solid #1e293f;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
     }
-    
-    /* 상단 헤더 */
+
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
     .header-btns { display: flex; gap: 6px; align-items: center; }
-    
+
     .btn-action { height: 34px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
     .btn-action:active { transform: scale(0.95); }
-    
+
     .btn-main { width: 68px; background: #1a2438; border: 1px solid #2b3a58; color: #79c0ff; }
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
-    /* 조합 카드 그리드: 모바일(기본)은 3열 */
     .cards-grid { 
       display: grid; 
       grid-template-columns: repeat(3, 1fr); 
       gap: 6px; 
     }
 
-    /* PC / 태블릿 (화면 너비 580px 이상): 조합 5개가 한 줄에 5열로 나란히 배치 */
-    @media (min-width: 580px) {
-      .cards-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 6px;
-      }
-    }
-
     .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 8px 6px; text-align: left; transition: all 0.25s ease; position: relative; }
-    
+
     .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .card-title { font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
     .card-status { font-size: 0.7rem; color: #8b949e; white-space: nowrap; }
-    
+
     .card-mid { display: flex; align-items: baseline; justify-content: space-between; }
     .card-odds { font-size: 0.95rem; font-weight: bold; color: #fff; }
     .card-progress { font-size: 0.75rem; font-weight: bold; color: #64748b; }
     .card-progress.has-hit { color: #f8fafc; text-shadow: 0 0 6px rgba(255,255,255,0.4); }
     .card-progress.complete { color: #34d399; text-shadow: 0 0 8px #34d399; }
-    
+
     .c1 .card-title { color: #00b4d8; } .c1.alive { border-color: #00b4d8; box-shadow: 0 0 10px rgba(0, 180, 216, 0.4); }
     .c2 .card-title { color: #06d6a0; } .c2.alive { border-color: #06d6a0; box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
     .c3 .card-title { color: #b5179e; } .c3.alive { border-color: #b5179e; box-shadow: 0 0 10px rgba(181, 23, 158, 0.4); }
-    .c4 .card-title { color: #f77f00; } .c4.alive { border-color: #f77f00; box-shadow: 0 0 10px rgba(247, 127, 0, 0.4); }
-    .c5 .card-title { color: #ffd166; } .c5.alive { border-color: #ffd166; box-shadow: 0 0 10px rgba(255, 209, 102, 0.4); }
 
     .card.failed { opacity: 0.25; border-color: #23314f !important; text-decoration: line-through; box-shadow: none !important; }
     .card.failed .card-status { color: #f85149; }
     .card.all-win { background: #1a4731; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
     .card.all-win .card-status { color: #34d399; font-weight: bold; }
 
-    /* 스크롤 가능한 경기 목록 영역 */
     .scrollable-body {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 12px 14px 60px 14px;
     }
-    
+
     .scrollable-body::-webkit-scrollbar { width: 6px; }
     .scrollable-body::-webkit-scrollbar-thumb { background: #1e293f; border-radius: 4px; }
     .scrollable-body::-webkit-scrollbar-track { background: transparent; }
 
     .match-list { display: flex; flex-direction: column; gap: 10px; }
     .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; }
-    
+
     .match-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .match-meta { font-size: 0.78rem; color: #7d8590; display: flex; align-items: center; gap: 6px; }
     .badge-type { background: #1c263c; color: #58a6ff; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 0.68rem; }
-    
+
     .combs-badge-wrap { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .c-badge { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: bold; color: #fff; }
     .bg-c1 { background: #00b4d8; }
     .bg-c2 { background: #06d6a0; }
     .bg-c3 { background: #b5179e; }
-    .bg-c4 { background: #f77f00; }
-    .bg-c5 { background: #ffd166; color: #111; }
-    .bg-c6 { background: #ec4899; }
 
     .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; font-weight: bold; }
     .team-home { flex: 1; font-size: 0.98rem; text-align: left; color: #f0f6fc; }
@@ -132,8 +114,9 @@
     .team-away { flex: 1; font-size: 0.98rem; text-align: right; color: #f0f6fc; }
 
     .bet-bottom-row { display: flex; align-items: center; gap: 8px; }
-    
+
     .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1.1; }
+    .slots-container.uo-grid { grid-template-columns: repeat(2, 1fr); }
     .bet-slot { background: #0c121e; border: 1px solid #1a253a; border-radius: 6px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .slot-label { font-size: 0.7rem; color: #525f7a; }
     .slot-odd { font-size: 0.82rem; color: #525f7a; font-weight: bold; }
@@ -141,7 +124,7 @@
     .bet-slot.my-pick { border-width: 1.5px; border-color: #2563eb; background: #112240; }
     .bet-slot.my-pick .slot-label { color: #93c5fd; font-weight: bold; }
     .bet-slot.my-pick .slot-odd { color: #60a5fa; }
-    
+
     .bet-slot.my-pick.is-hit { background: #064e3b; border-color: #059669; }
     .bet-slot.my-pick.is-hit .slot-label { color: #a7f3d0; }
     .bet-slot.my-pick.is-hit .slot-odd { color: #34d399; }
@@ -164,7 +147,7 @@
   <div class="app-container">
     <div class="fixed-header-section">
       <div class="header">
-        <div class="title">프로토 130회차 트래커</div>
+        <div class="title">프로토 131회차 트래커</div>
         <div class="header-btns">
           <button class="btn-action btn-main" onclick="simulateNext()">자동입력</button>
           <button class="btn-action btn-reset" onclick="resetAll()">초기화</button>
@@ -175,23 +158,15 @@
       <div class="cards-grid">
         <div id="card-1" class="card c1 alive">
           <div class="card-top"><span class="card-title">조합 1</span><span class="card-status" id="st-1">진행중</span></div>
-          <div class="card-mid"><span class="card-odds">48.7배</span><span class="card-progress" id="prog-1">0/4</span></div>
+          <div class="card-mid"><span class="card-odds">77.8배</span><span class="card-progress" id="prog-1">0/5</span></div>
         </div>
         <div id="card-2" class="card c2 alive">
           <div class="card-top"><span class="card-title">조합 2</span><span class="card-status" id="st-2">진행중</span></div>
-          <div class="card-mid"><span class="card-odds">50.3배</span><span class="card-progress" id="prog-2">0/5</span></div>
+          <div class="card-mid"><span class="card-odds">13.1배</span><span class="card-progress" id="prog-2">0/4</span></div>
         </div>
         <div id="card-3" class="card c3 alive">
           <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
-          <div class="card-mid"><span class="card-odds">49.7배</span><span class="card-progress" id="prog-3">0/5</span></div>
-        </div>
-        <div id="card-4" class="card c4 alive">
-          <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
-          <div class="card-mid"><span class="card-odds">13.9배</span><span class="card-progress" id="prog-4">0/4</span></div>
-        </div>
-        <div id="card-5" class="card c5 alive">
-          <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
-          <div class="card-mid"><span class="card-odds">71.7배</span><span class="card-progress" id="prog-5">0/4</span></div>
+          <div class="card-mid"><span class="card-odds">5.4배</span><span class="card-progress" id="prog-3">0/3</span></div>
         </div>
       </div>
     </div>
@@ -203,21 +178,18 @@
 
   <script>
     const matches = [
-      { id: "m1", time: "11.03 14:00", league: "J2", type: "승무패", home: "반포레 고후", away: "니가타", pickTarget: "away", odd: "2.03", combs: [3] },
-      { id: "m2", time: "11.03 14:00", league: "J2", type: "승무패", home: "오이타", away: "하치노헤", pickTarget: "home", odd: "2.02", combs: [3] },
-      { id: "m3", time: "11.03 14:00", league: "J2", type: "H-1.0", home: "미야자키", away: "도치기", pickTarget: "home", odd: "3.15", combs: [1] },
-      { id: "m4", time: "11.03 14:00", league: "J2", type: "승무패", home: "미야자키", away: "도치기", pickTarget: "home", odd: "1.78", combs: [2, 3, 4] },
-      { id: "m5", time: "11.03 14:50", league: "J2", type: "승무패", home: "이마바리", away: "삿포로", pickTarget: "away", odd: "2.27", combs: [1, 2, 4] },
-      { id: "m6", time: "11.03 23:00", league: "챔피언십", type: "H+1.0", home: "프레스턴", away: "셰필드U", pickTarget: "draw", odd: "3.60", combs: [1, 3, 5] },
-      { id: "m7", time: "11.03 23:00", league: "챔피언십", type: "승무패", home: "프레스턴", away: "셰필드U", pickTarget: "away", odd: "1.99", combs: [2] },
-      { id: "m8", time: "11.03 23:00", league: "챔피언십", type: "승무패", home: "QPR", away: "번리", pickTarget: "home", odd: "1.89", combs: [1, 3, 4] },
-      { id: "m9", time: "11.03 23:00", league: "챔피언십", type: "H-1.0", home: "QPR", away: "번리", pickTarget: "home", odd: "3.45", combs: [2, 5] },
-      { id: "m10", time: "11.04 04:45", league: "챔피언십", type: "승무패", home: "왓포드", away: "링컨", pickTarget: "home", odd: "2.22", combs: [5] },
-      { id: "m11", time: "11.04 05:00", league: "챔피언십", type: "승무패", home: "버밍엄", away: "밀월", pickTarget: "home", odd: "1.81", combs: [2, 4] },
-      { id: "m12", time: "11.04 05:00", league: "챔스", type: "승무패", home: "맨유", away: "AS로마", pickTarget: "away", odd: "2.60", combs: [5] }
+      { id: "m1", time: "11.04 19:00", league: "ACLE", type: "승무패", home: "포항 스틸러스", away: "감바 오사카", pickTarget: "away", odd: "1.89", combs: [1, 2] },
+      { id: "m2", time: "11.04 21:15", league: "ACLE", type: "승무패", home: "부리람 유나이티드", away: "가시마 앤틀러스", pickTarget: "away", odd: "1.89", combs: [1, 2, 3] },
+      { id: "m3", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "카디프 시티", away: "웨스트햄", pickTarget: "draw", odd: "3.85", combs: [1] },
+      { id: "m4", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "카디프 시티", away: "웨스트햄", pickTarget: "away", odd: "1.87", combs: [2] },
+      { id: "m5", time: "11.05 04:45", league: "챔피언십", type: "U/O 3.5", home: "카디프 시티", away: "웨스트햄", pickTarget: "under", odd: "1.69", combs: [3] },
+      { id: "m6", time: "11.05 04:45", league: "챔피언십", type: "H+1.0", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "2.90", combs: [1] },
+      { id: "m7", time: "11.05 04:45", league: "챔피언십", type: "승무패", home: "렉섬", away: "미들즈브러", pickTarget: "away", odd: "1.67", combs: [3] },
+      { id: "m8", time: "11.05 05:00", league: "챔스", type: "승무패", home: "PSV에인트호번", away: "클뤼프 브뤼허", pickTarget: "home", odd: "1.95", combs: [1, 2] }
     ];
 
-    let state = JSON.parse(localStorage.getItem('proto_130_fix') || '{}');
+    const TOTAL_COMBS = 3;
+    let state = JSON.parse(localStorage.getItem('proto_131_fix') || '{}');
 
     function render() {
       const list = document.getElementById('matchList');
@@ -225,28 +197,52 @@
 
       matches.forEach(m => {
         const cur = state[m.id] || 0;
-
         const combsHtml = m.combs.map(c => `<div class="c-badge bg-c${c}">${c}</div>`).join('');
 
-        const slotsHtml = ['home', 'draw', 'away'].map((t, idx) => {
-          const label = ['승', '무', '패'][idx];
-          if (m.pickTarget === t) {
-            const hitClass = cur === 1 ? 'is-hit' : (cur === 2 ? 'is-fail' : '');
-            return `
-              <div class="bet-slot my-pick ${hitClass}">
-                <div class="slot-label">${label}</div>
-                <div class="slot-odd">${m.odd}</div>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="bet-slot">
-                <div class="slot-label">${label}</div>
-                <div class="slot-odd">-</div>
-              </div>
-            `;
-          }
-        }).join('');
+        let slotsHtml = '';
+        let isUO = m.type.startsWith('U/O');
+
+        if (isUO) {
+          slotsHtml = ['under', 'over'].map((t, idx) => {
+            const label = ['언더', '오버'][idx];
+            if (m.pickTarget === t) {
+              const hitClass = cur === 1 ? 'is-hit' : (cur === 2 ? 'is-fail' : '');
+              return `
+                <div class="bet-slot my-pick ${hitClass}">
+                  <div class="slot-label">${label}</div>
+                  <div class="slot-odd">${m.odd}</div>
+                </div>
+              `;
+            } else {
+              return `
+                <div class="bet-slot">
+                  <div class="slot-label">${label}</div>
+                  <div class="slot-odd">-</div>
+                </div>
+              `;
+            }
+          }).join('');
+        } else {
+          slotsHtml = ['home', 'draw', 'away'].map((t, idx) => {
+            const label = ['승', '무', '패'][idx];
+            if (m.pickTarget === t) {
+              const hitClass = cur === 1 ? 'is-hit' : (cur === 2 ? 'is-fail' : '');
+              return `
+                <div class="bet-slot my-pick ${hitClass}">
+                  <div class="slot-label">${label}</div>
+                  <div class="slot-odd">${m.odd}</div>
+                </div>
+              `;
+            } else {
+              return `
+                <div class="bet-slot">
+                  <div class="slot-label">${label}</div>
+                  <div class="slot-odd">-</div>
+                </div>
+              `;
+            }
+          }).join('');
+        }
 
         const actHit = cur === 1 ? 'active-hit' : '';
         const actFail = cur === 2 ? 'active-fail' : '';
@@ -268,7 +264,7 @@
             <span class="team-away">${m.away}</span>
           </div>
           <div class="bet-bottom-row">
-            <div class="slots-container">${slotsHtml}</div>
+            <div class="slots-container ${isUO ? 'uo-grid' : ''}">${slotsHtml}</div>
             <div class="status-btns-group">
               <button class="btn-status ${actHit}" onclick="setStatus('${m.id}', 1)">적중</button>
               <button class="btn-status ${actFail}" onclick="setStatus('${m.id}', 2)">낙첨</button>
@@ -284,14 +280,14 @@
 
     function setStatus(id, val) {
       state[id] = val;
-      localStorage.setItem('proto_130_fix', JSON.stringify(state));
+      localStorage.setItem('proto_131_fix', JSON.stringify(state));
       render();
     }
 
     function resetAll() {
       if (confirm('모든 경기 마킹을 초기 상태로 되돌릴까?')) {
         state = {};
-        localStorage.removeItem('proto_130_fix');
+        localStorage.removeItem('proto_131_fix');
         render();
       }
     }
@@ -303,12 +299,12 @@
         return;
       }
       state[unassigned[0].id] = Math.random() < 0.75 ? 1 : 2;
-      localStorage.setItem('proto_130_fix', JSON.stringify(state));
+      localStorage.setItem('proto_131_fix', JSON.stringify(state));
       render();
     }
 
     function updateCards() {
-      for (let c = 1; c <= 5; c++) {
+      for (let c = 1; c <= TOTAL_COMBS; c++) {
         const cMatches = matches.filter(m => m.combs.includes(c));
         const total = cMatches.length;
         const hitCount = cMatches.filter(m => state[m.id] === 1).length;
