@@ -1,3 +1,27 @@
+<!-- 
+[SYSTEM PROMPT & AUTOMATION RULES]
+역할: 프로토 경기 영수증 이미지를 분석하여 이 파일의 구조를 100% 유지한 신규 회차 HTML 코드를 출력한다.
+
+[필수 규칙 및 지침]
+1. 파일명 및 다운로드 규칙:
+   - 결과물 파일명은 반드시 'bet.html'로 지정할 것 (깃허브 업로드 시 이름 변경 없이 바로 덮어쓸 수 있도록).
+2. Supabase 연동 정보 및 실시간 동기화 스크립트 절대 누락 금지:
+   - SUPABASE_URL: "https://ioqxulvuasjsabcvikug.supabase.co"
+   - SUPABASE_KEY: "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G"
+   - TABLE_NAME: "bet"
+   - CURRENT_ROUND: 스샷에 적힌 회차 번호로 교체
+3. 영수증 기반 데이터 파싱:
+   - combos 객체 배열: id, odd(배당), betAmount(구매금액, 기본 1,000원 또는 영수증 표기 금액)
+   - matches 배열: 경기 일시, 리그, 유형(승무패/핸디캡/언오버), 홈/원정팀명, 내 픽(home/draw/away), 배당, 포함 조합 번호(combs) 완벽 파싱
+4. UI 및 연출 스펙 100% 보존:
+   - 상단 조합 카드 클릭 시 바로 아래에 부드럽게 열리는 펼침 서랍(comboDetailDrawer): 배팅경기, 구매금액, 당첨(예상)금액 표시
+   - 맞춘 비율에 따른 조합 카드 배경 게이지(card-fill-gauge, 20% 투명도)
+   - 1경기 남았을 때 황금빛 심장박동 펄스(match-point) 및 '★막폴' 텍스트
+   - 적중 경기 초록 네온 발광(card-hit) 및 조합 전멸 시 붉은 취소선 처리
+   - 상단 동기화 인디케이터(syncDot)
+5. 출력 형식:
+   - 부가 설명이나 서론/결론 없이 바로 사용할 수 있는 완전한 단일 HTML 코드 전체로 출력할 것.
+-->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -10,7 +34,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0b0f19">
 
-  <!-- 수파베이스 클라이언트 CDN 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -42,7 +65,7 @@
 
     .fixed-header-section {
       flex-shrink: 0;
-      padding: 14px 14px 12px 14px;
+      padding: 14px 14px 10px 14px;
       background: #0b0f19;
       z-index: 100;
       border-bottom: 2px solid #1e293f;
@@ -53,7 +76,6 @@
     .title-wrap { display: flex; align-items: center; gap: 8px; }
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
     
-    /* 동기화 상태 표시등 (초록 깜빡임) */
     .sync-indicator {
       width: 8px;
       height: 8px;
@@ -77,7 +99,6 @@
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
-    /* 조합 카드 그리드 */
     .cards-grid { 
       display: grid; 
       grid-template-columns: repeat(4, 1fr); 
@@ -91,19 +112,24 @@
       }
     }
 
-    /* 카드 기본 스타일 */
     .card { 
       background: #131b2e; 
       border: 1px solid #23314f; 
       border-radius: 8px; 
       padding: 7px 5px; 
       text-align: left; 
-      transition: border-color 0.25s ease, box-shadow 0.25s ease; 
+      transition: all 0.2s ease; 
       position: relative; 
       overflow: hidden; 
+      cursor: pointer;
+    }
+    .card:active { transform: scale(0.97); }
+
+    .card.is-selected {
+      outline: 2px solid #38bdf8;
+      outline-offset: 1px;
     }
 
-    /* 🎨 내부에서 왼쪽->오른쪽으로 차오르는 20% 투명도 게이지 레이어 */
     .card-fill-gauge {
       position: absolute;
       top: 0;
@@ -127,7 +153,6 @@
     .card-progress.has-hit { color: #f8fafc; text-shadow: 0 0 6px rgba(255,255,255,0.4); }
     .card-progress.complete { color: #34d399; text-shadow: 0 0 8px #34d399; }
 
-    /* 조합별 고유 컬러 */
     .c1 .card-title { color: #00b4d8; } .c1.alive { border-color: #00b4d8; box-shadow: 0 0 8px rgba(0, 180, 216, 0.4); }
     .c2 .card-title { color: #06d6a0; } .c2.alive { border-color: #06d6a0; box-shadow: 0 0 8px rgba(6, 214, 160, 0.4); }
     .c3 .card-title { color: #b5179e; } .c3.alive { border-color: #b5179e; box-shadow: 0 0 8px rgba(181, 23, 158, 0.4); }
@@ -136,7 +161,6 @@
     .c6 .card-title { color: #ec4899; } .c6.alive { border-color: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.4); }
     .c7 .card-title { color: #38bdf8; } .c7.alive { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
 
-    /* 각 조합별 20% 투명도 게이지 색상 연결 */
     .c1 .card-fill-gauge { background: rgba(0, 180, 216, 0.22); }
     .c2 .card-fill-gauge { background: rgba(6, 214, 160, 0.22); }
     .c3 .card-fill-gauge { background: rgba(181, 23, 158, 0.22); }
@@ -145,7 +169,6 @@
     .c6 .card-fill-gauge { background: rgba(236, 72, 153, 0.22); }
     .c7 .card-fill-gauge { background: rgba(56, 189, 248, 0.22); }
 
-    /* 1개 남았을 때 (막폴) 두근두근 펄스 애니메이션 */
     @keyframes pulseCard {
       0% { box-shadow: 0 0 6px rgba(251, 191, 36, 0.4); border-color: #f59e0b; }
       50% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.85); border-color: #fbbf24; }
@@ -166,6 +189,129 @@
     .card.all-win { background: #1a4731 !important; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
     .card.all-win .card-status { color: #34d399; font-weight: bold; }
     .card.all-win .card-fill-gauge { width: 100% !important; background: rgba(46, 160, 67, 0.35) !important; }
+
+    /* 조합 상세 펼침 서랍 */
+    .combo-drawer {
+      margin-top: 10px;
+      background: #111a2e;
+      border: 1px solid #233659;
+      border-radius: 8px;
+      padding: 10px 12px;
+      animation: slideDown 0.22s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #1e2c47;
+    }
+    .drawer-title {
+      font-size: 0.88rem;
+      font-weight: bold;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .drawer-badge {
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: normal;
+    }
+    .drawer-badge.win { background: #064e3b; color: #34d399; font-weight: bold; border: 1px solid #059669; }
+    .drawer-badge.alive { background: #1e293b; color: #94a3b8; }
+    .drawer-badge.fail { background: #3b1d24; color: #fb7185; }
+
+    .drawer-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .drawer-money-box {
+      display: flex;
+      gap: 12px;
+      background: #090e1a;
+      border: 1px solid #1a253c;
+      border-radius: 6px;
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      justify-content: space-around;
+    }
+    .money-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .money-lbl {
+      font-size: 0.68rem;
+      color: #7d8590;
+      margin-bottom: 2px;
+    }
+    .money-val {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #e2e8f0;
+    }
+    .money-item.highlight .money-val {
+      color: #38bdf8;
+    }
+    .money-item.highlight.is-win .money-val {
+      color: #34d399;
+      font-size: 1.05rem;
+      text-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+    }
+
+    .drawer-match-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .drawer-match-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #141f35;
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+    .drawer-match-teams {
+      color: #cbd5e1;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 65%;
+    }
+    .drawer-match-pick {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .d-pick-badge {
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .d-pick-badge.hit { background: #064e3b; color: #34d399; }
+    .d-pick-badge.fail { background: #4c1d24; color: #fb7185; }
+    .d-pick-badge.wait { background: #1e293b; color: #94a3b8; }
 
     .scrollable-body {
       flex: 1;
@@ -343,42 +489,65 @@
       </div>
 
       <div class="cards-grid">
-        <div id="card-1" class="card c1 alive">
+        <div id="card-1" class="card c1 alive" onclick="toggleComboDrawer(1)">
           <div class="card-fill-gauge" id="gauge-1"></div>
           <div class="card-top"><span class="card-title">조합 1</span><span class="card-status" id="st-1">진행중</span></div>
           <div class="card-mid"><span class="card-odds">76.9배</span><span class="card-progress" id="prog-1">0/5</span></div>
         </div>
-        <div id="card-2" class="card c2 alive">
+        <div id="card-2" class="card c2 alive" onclick="toggleComboDrawer(2)">
           <div class="card-fill-gauge" id="gauge-2"></div>
           <div class="card-top"><span class="card-title">조합 2</span><span class="card-status" id="st-2">진행중</span></div>
           <div class="card-mid"><span class="card-odds">18.0배</span><span class="card-progress" id="prog-2">0/4</span></div>
         </div>
-        <div id="card-3" class="card c3 alive">
+        <div id="card-3" class="card c3 alive" onclick="toggleComboDrawer(3)">
           <div class="card-fill-gauge" id="gauge-3"></div>
           <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
           <div class="card-mid"><span class="card-odds">37.5배</span><span class="card-progress" id="prog-3">0/4</span></div>
         </div>
-        <div id="card-4" class="card c4 alive">
+        <div id="card-4" class="card c4 alive" onclick="toggleComboDrawer(4)">
           <div class="card-fill-gauge" id="gauge-4"></div>
           <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
           <div class="card-mid"><span class="card-odds">17.7배</span><span class="card-progress" id="prog-4">0/4</span></div>
         </div>
-        <div id="card-5" class="card c5 alive">
+        <div id="card-5" class="card c5 alive" onclick="toggleComboDrawer(5)">
           <div class="card-fill-gauge" id="gauge-5"></div>
           <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
           <div class="card-mid"><span class="card-odds">25.2배</span><span class="card-progress" id="prog-5">0/4</span></div>
         </div>
-        <div id="card-6" class="card c6 alive">
+        <div id="card-6" class="card c6 alive" onclick="toggleComboDrawer(6)">
           <div class="card-fill-gauge" id="gauge-6"></div>
           <div class="card-top"><span class="card-title">조합 6</span><span class="card-status" id="st-6">진행중</span></div>
           <div class="card-mid"><span class="card-odds">40.8배</span><span class="card-progress" id="prog-6">0/4</span></div>
         </div>
-        <div id="card-7" class="card c7 alive">
+        <div id="card-7" class="card c7 alive" onclick="toggleComboDrawer(7)">
           <div class="card-fill-gauge" id="gauge-7"></div>
           <div class="card-top"><span class="card-title">조합 7</span><span class="card-status" id="st-7">진행중</span></div>
           <div class="card-mid"><span class="card-odds">40.3배</span><span class="card-progress" id="prog-7">0/4</span></div>
         </div>
       </div>
+
+      <!-- 조합 클릭 시 열리는 슬라이드 서랍 -->
+      <div id="comboDetailDrawer" class="combo-drawer" style="display: none;">
+        <div class="drawer-header">
+          <div class="drawer-title">
+            <span id="drawerTitle">조합 4</span>
+            <span class="drawer-badge" id="drawerBadge">적중!</span>
+          </div>
+          <button class="drawer-close" onclick="closeDrawer()" title="닫기">✕</button>
+        </div>
+        <div class="drawer-money-box">
+          <div class="money-item">
+            <span class="money-lbl">배팅 금액</span>
+            <span class="money-val" id="drawerBetAmount">1,000원</span>
+          </div>
+          <div class="money-item highlight" id="drawerPayoutBox">
+            <span class="money-lbl" id="drawerPayoutLbl">적중 당첨금</span>
+            <span class="money-val" id="drawerPayout">17,700원</span>
+          </div>
+        </div>
+        <div class="drawer-match-list" id="drawerMatchList"></div>
+      </div>
+
     </div>
 
     <div class="scrollable-body">
@@ -387,13 +556,22 @@
   </div>
 
   <script>
-    // 🔗 수파베이스 설정 (대장님 고유 프로젝트 연동)
     const SUPABASE_URL = "https://ioqxulvuasjsabcvikug.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G";
     const TABLE_NAME = "bet";
     const CURRENT_ROUND = "132";
 
     const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    const comboInfo = {
+      1: { odd: 76.9, betAmount: 1000 },
+      2: { odd: 18.0, betAmount: 1000 },
+      3: { odd: 37.5, betAmount: 1000 },
+      4: { odd: 17.7, betAmount: 1000 },
+      5: { odd: 25.2, betAmount: 1000 },
+      6: { odd: 40.8, betAmount: 1000 },
+      7: { odd: 40.3, betAmount: 1000 }
+    };
 
     const matches = [
       { id: "m1", time: "11.07 04:30", league: "분데스리가", type: "승무패", home: "함부르크", away: "묀헨글라트바흐", pickTarget: "home", odd: "2.22", combs: [1, 3] },
@@ -420,8 +598,8 @@
     const TOTAL_COMBS = 7;
     let state = JSON.parse(localStorage.getItem('proto_132_fix_v2') || '{}');
     let collapsed = JSON.parse(localStorage.getItem('proto_132_collapsed') || '{}');
+    let activeDrawerCombo = null;
 
-    // 동기화 애니메이션 제어
     function flashSyncDot() {
       const dot = document.getElementById('syncDot');
       if (!dot) return;
@@ -429,13 +607,11 @@
       setTimeout(() => dot.classList.remove('syncing'), 450);
     }
 
-    // 🚀 수파베이스에 상태 저장
     async function pushStateToCloud() {
       flashSyncDot();
       if (!supabaseClient) return;
       try {
-        // 기존 회차 레코드 있는지 조회 후 upsert
-        const { data, error: selectErr } = await supabaseClient
+        const { data } = await supabaseClient
           .from(TABLE_NAME)
           .select('id')
           .eq('round', CURRENT_ROUND)
@@ -456,10 +632,8 @@
       }
     }
 
-    // 🚀 수파베이스 초기 데이터 로드 및 실시간 구독
     async function initSupabaseSync() {
       if (!supabaseClient) return;
-
       try {
         const { data } = await supabaseClient
           .from(TABLE_NAME)
@@ -476,7 +650,6 @@
         console.error('초기 데이터 로딩 오류:', err);
       }
 
-      // 실시간 수신 구독
       supabaseClient
         .channel('proto-realtime-channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, payload => {
@@ -577,6 +750,9 @@
       });
 
       updateCards(comboStatus);
+      if (activeDrawerCombo) {
+        renderDrawer(activeDrawerCombo, comboStatus);
+      }
     }
 
     function pickOutcome(id, outcome) {
@@ -645,16 +821,18 @@
         const gauge = document.getElementById(`gauge-${c}`);
 
         card.className = `card c${c}`;
+        if (activeDrawerCombo === c) {
+          card.classList.add('is-selected');
+        }
+
         progLabel.textContent = `${hitCount}/${total}`;
         progLabel.className = 'card-progress';
 
-        // 🎯 맞춘 경기 비율만큼 게이지 채우기
         const progressPercent = total > 0 ? (hitCount / total) * 100 : 0;
         if (gauge) {
           gauge.style.width = `${progressPercent}%`;
         }
 
-        // 🎯 카드 상태별 스타일
         if (hasFail) {
           card.classList.add('failed');
           stLabel.textContent = '낙첨';
@@ -666,7 +844,6 @@
           card.classList.add('alive');
           if (hitCount > 0) progLabel.classList.add('has-hit');
 
-          // 🔥 1경기 남았을 때 (막폴) 심장박동 펄스 효과
           if (remaining === 1 && hitCount > 0) {
             card.classList.add('match-point');
             stLabel.textContent = '★막폴';
@@ -675,6 +852,101 @@
           }
         }
       }
+    }
+
+    function toggleComboDrawer(comboNum) {
+      if (activeDrawerCombo === comboNum) {
+        closeDrawer();
+      } else {
+        activeDrawerCombo = comboNum;
+        const comboStatus = getComboStatusMap();
+        renderDrawer(comboNum, comboStatus);
+        updateCards(comboStatus);
+      }
+    }
+
+    function closeDrawer() {
+      activeDrawerCombo = null;
+      const drawer = document.getElementById('comboDetailDrawer');
+      if (drawer) drawer.style.display = 'none';
+      const comboStatus = getComboStatusMap();
+      updateCards(comboStatus);
+    }
+
+    function renderDrawer(comboNum, comboStatus) {
+      const drawer = document.getElementById('comboDetailDrawer');
+      if (!drawer) return;
+
+      const info = comboInfo[comboNum] || { odd: 1.0, betAmount: 1000 };
+      const cMatches = matches.filter(m => m.combs.includes(comboNum));
+      const total = cMatches.length;
+      const hitCount = cMatches.filter(m => state[m.id]?.outcome === m.pickTarget).length;
+      const hasFail = !comboStatus[comboNum];
+      const allHits = (hitCount === total);
+
+      drawer.style.display = 'block';
+
+      document.getElementById('drawerTitle').textContent = `조합 ${comboNum} (${info.odd}배)`;
+      const badge = document.getElementById('drawerBadge');
+      if (allHits) {
+        badge.className = 'drawer-badge win';
+        badge.textContent = '적중 완료!';
+      } else if (hasFail) {
+        badge.className = 'drawer-badge fail';
+        badge.textContent = '낙첨';
+      } else {
+        badge.className = 'drawer-badge alive';
+        badge.textContent = `진행중 (${hitCount}/${total})`;
+      }
+
+      const betAmt = info.betAmount || 1000;
+      const expectedPayout = Math.round(betAmt * info.odd);
+
+      document.getElementById('drawerBetAmount').textContent = `${betAmt.toLocaleString()}원`;
+      const payoutBox = document.getElementById('drawerPayoutBox');
+      const payoutVal = document.getElementById('drawerPayout');
+      const payoutLbl = document.getElementById('drawerPayoutLbl');
+
+      if (allHits) {
+        payoutLbl.textContent = '적중 당첨금';
+        payoutVal.textContent = `${expectedPayout.toLocaleString()}원`;
+        payoutBox.className = 'money-item highlight is-win';
+      } else if (hasFail) {
+        payoutLbl.textContent = '예상 당첨금';
+        payoutVal.textContent = '0원 (낙첨)';
+        payoutBox.className = 'money-item highlight';
+      } else {
+        payoutLbl.textContent = '적중 시 당첨금';
+        payoutVal.textContent = `${expectedPayout.toLocaleString()}원`;
+        payoutBox.className = 'money-item highlight';
+      }
+
+      const listContainer = document.getElementById('drawerMatchList');
+      listContainer.innerHTML = '';
+
+      cMatches.forEach(m => {
+        const cur = state[m.id]?.outcome;
+        const isHit = cur && (cur === m.pickTarget);
+        const isFail = cur && (cur !== m.pickTarget);
+
+        let badgeClass = 'd-pick-badge wait';
+        let badgeTxt = '대기';
+        if (isHit) { badgeClass = 'd-pick-badge hit'; badgeTxt = '적중'; }
+        else if (isFail) { badgeClass = 'd-pick-badge fail'; badgeTxt = '실패'; }
+
+        const pickKor = { home: '홈승', draw: '무승부', away: '원정승' }[m.pickTarget] || m.pickTarget;
+
+        const row = document.createElement('div');
+        row.className = 'drawer-match-item';
+        row.innerHTML = `
+          <div class="drawer-match-teams">${m.home} vs ${m.away}</div>
+          <div class="drawer-match-pick">
+            <span style="color: #94a3b8; font-size: 0.72rem;">[${pickKor} ${m.odd}]</span>
+            <span class="${badgeClass}">${badgeTxt}</span>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
     }
 
     function toggleFullscreen() {
