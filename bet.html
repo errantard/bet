@@ -57,7 +57,6 @@
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
-    /* 조합 카드 그리드: 모바일은 4열 / 3열 분할, PC는 7열 */
     .cards-grid { 
       display: grid; 
       grid-template-columns: repeat(4, 1fr); 
@@ -110,27 +109,28 @@
     .match-list { display: flex; flex-direction: column; gap: 10px; }
     .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; transition: all 0.25s ease; }
 
-    /* 맞춘 경기(적중): 항상 최우선 발광 효과 */
+    /* 맞춘 경기(적중): 초록 네온 발광 */
     .match-card.card-hit {
       border-color: #059669 !important;
       box-shadow: 0 0 12px rgba(5, 150, 105, 0.3) !important;
+      background: #112022 !important;
       opacity: 1 !important;
-      filter: none !important;
     }
 
-    /* 앞선 경기들이 다 부러져서 의미 없어진 경기 (적중된 경기는 제외) */
+    /* 앞선 경기들이 다 부러져서 의미 없어진 경기 (대기/낙첨인 경우 흐림) */
     .match-card.all-combos-dead:not(.card-hit) {
       opacity: 0.35;
       filter: grayscale(0.85);
       border-color: #1e2433 !important;
     }
-    /* 취소선은 팀명 텍스트에만 정확히 부여 (토글 버튼, 적중 경기는 제외) */
-    .match-card.all-combos-dead:not(.card-hit) .team-home,
-    .match-card.all-combos-dead:not(.card-hit) .team-away {
-      text-decoration: line-through;
+
+    /* 🔥 핵심: 조합이 전멸한 경기는 '발광 중인 맞춘 경기'라도 팀명에 취소선 표시! */
+    .match-card.all-combos-dead .team-home,
+    .match-card.all-combos-dead .team-away {
+      text-decoration: line-through !important;
     }
 
-    /* 일반 낙첨 경기 */
+    /* 맞추지 못하고 이미 끝난 경기(낙첨) */
     .match-card.card-fail {
       opacity: 0.55;
       background: #17141d;
@@ -151,13 +151,11 @@
     .bg-c6 { background: #ec4899; }
     .bg-c7 { background: #38bdf8; }
 
-    /* 팀명 및 우측 접기/펼치기 토글 */
     .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; font-weight: bold; }
     .team-home { flex: 1; font-size: 0.98rem; text-align: left; color: #f0f6fc; }
     .vs-text { font-size: 0.75rem; color: #6e7681; margin: 0 8px; }
     .team-away { flex: 1; font-size: 0.98rem; text-align: right; color: #f0f6fc; }
     
-    /* 토글 버튼은 취소선 절대 적용 금지 */
     .btn-fold-toggle {
       margin-left: 10px;
       background: #1c263c;
@@ -177,7 +175,6 @@
     }
     .btn-fold-toggle:hover { color: #fff; background: #263554; }
 
-    /* 접힘 모드 스타일 */
     .match-card.is-collapsed { padding: 8px 14px; }
     .match-card.is-collapsed .match-header-row,
     .match-card.is-collapsed .bet-bottom-row { display: none; }
@@ -185,7 +182,6 @@
 
     .bet-bottom-row { display: flex; align-items: center; gap: 8px; }
 
-    /* 슬롯 클릭 가능한 버튼형 그리드 */
     .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1.25; }
     .bet-slot-btn { 
       background: #0c121e; 
@@ -204,12 +200,10 @@
     .slot-label { font-size: 0.7rem; color: #64748b; }
     .slot-odd { font-size: 0.82rem; color: #64748b; font-weight: bold; }
 
-    /* 내가 픽한 슬롯 표시 */
     .bet-slot-btn.my-pick { border-width: 1.5px; border-color: #2563eb; background: #112240; }
     .bet-slot-btn.my-pick .slot-label { color: #93c5fd; font-weight: bold; }
     .bet-slot-btn.my-pick .slot-odd { color: #60a5fa; }
 
-    /* 실제 결과가 선택된 슬롯 */
     .bet-slot-btn.selected-result {
       background: #334155;
       border-color: #64748b;
@@ -217,7 +211,6 @@
     .bet-slot-btn.selected-result .slot-label { color: #f1f5f9; }
     .bet-slot-btn.selected-result .slot-odd { color: #fff; }
 
-    /* 적중된 경우 */
     .bet-slot-btn.my-pick.is-hit { 
       background: #064e3b !important; 
       border-color: #34d399 !important; 
@@ -226,7 +219,6 @@
     .bet-slot-btn.my-pick.is-hit .slot-label { color: #a7f3d0; }
     .bet-slot-btn.my-pick.is-hit .slot-odd { color: #34d399; }
 
-    /* 낙첨된 경우 내 픽 슬롯 */
     .bet-slot-btn.my-pick.is-fail { 
       background: #4c1d24 !important; 
       border-color: #e11d48 !important; 
@@ -235,7 +227,6 @@
     .bet-slot-btn.my-pick.is-fail .slot-label { color: #fecdd3; }
     .bet-slot-btn.my-pick.is-fail .slot-odd { color: #fb7185; }
 
-    /* 대기 리셋 버튼 */
     .btn-reset-match {
       height: 44px;
       width: 58px;
@@ -335,7 +326,6 @@
     let state = JSON.parse(localStorage.getItem('proto_132_fix_v2') || '{}');
     let collapsed = JSON.parse(localStorage.getItem('proto_132_collapsed') || '{}');
 
-    // 조합별 생존 여부 판정
     function getComboStatusMap() {
       const comboStatus = {};
       for (let c = 1; c <= TOTAL_COMBS; c++) {
@@ -344,7 +334,7 @@
           const res = state[m.id]?.outcome;
           return res && res !== m.pickTarget;
         });
-        comboStatus[c] = !hasFail; // true: 생존, false: 전멸
+        comboStatus[c] = !hasFail;
       }
       return comboStatus;
     }
@@ -360,7 +350,7 @@
         const isFail = curOutcome && curOutcome !== m.pickTarget;
         const isCollapsed = !!collapsed[m.id];
 
-        // 해당 경기가 속한 모든 조합이 이미 부러져서 의미가 없어진 상태인지 확인
+        // 해당 경기가 속한 모든 조합이 전멸했는지 여부
         const allAssociatedCombosDead = m.combs.every(c => comboStatus[c] === false);
 
         const combsHtml = m.combs.map(c => `<div class="c-badge bg-c${c}">${c}</div>`).join('');
@@ -391,15 +381,14 @@
         const card = document.createElement('div');
         let cardClasses = ['match-card'];
         
-        // 상태별 클래스 부여
         if (isHit) {
-          cardClasses.push('card-hit'); // 맞춘 경기는 무조건 발광
+          cardClasses.push('card-hit'); // 적중 시 초록 발광 유지
         } else if (isFail) {
           cardClasses.push('card-fail');
         }
 
-        // 맞추지 않은 상태에서 조합들이 전멸했을 때만 취소선/흐림 클래스 부여
-        if (allAssociatedCombosDead && !isHit) {
+        // 조합이 전멸한 경우 클래스 부여 (CSS에서 .all-combos-dead .team-home에 취소선 적용됨)
+        if (allAssociatedCombosDead) {
           cardClasses.push('all-combos-dead');
         }
 
