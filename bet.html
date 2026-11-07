@@ -10,6 +10,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0b0f19">
 
+  <!-- 수파베이스 클라이언트 CDN 로드 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
 
@@ -27,7 +30,7 @@
 
     .app-container {
       width: 100%;
-      max-width: 720px;
+      max-width: 760px;
       height: 100%;
       background: #0b0f19;
       display: flex;
@@ -47,7 +50,24 @@
     }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .title-wrap { display: flex; align-items: center; gap: 8px; }
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
+    
+    /* 동기화 상태 표시등 (초록 깜빡임) */
+    .sync-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      transition: all 0.3s;
+    }
+    .sync-indicator.syncing {
+      background: #f59e0b;
+      box-shadow: 0 0 10px #f59e0b;
+      transform: scale(1.3);
+    }
+
     .header-btns { display: flex; gap: 6px; align-items: center; }
 
     .btn-action { height: 34px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
@@ -57,42 +77,95 @@
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
+    /* 조합 카드 그리드 */
     .cards-grid { 
       display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      gap: 6px; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 5px; 
     }
 
-    @media (min-width: 580px) {
+    @media (min-width: 620px) {
       .cards-grid {
-        grid-template-columns: repeat(6, 1fr);
-        gap: 6px;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
       }
     }
 
-    .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 8px 6px; text-align: left; transition: all 0.25s ease; position: relative; }
+    /* 카드 기본 스타일 */
+    .card { 
+      background: #131b2e; 
+      border: 1px solid #23314f; 
+      border-radius: 8px; 
+      padding: 7px 5px; 
+      text-align: left; 
+      transition: border-color 0.25s ease, box-shadow 0.25s ease; 
+      position: relative; 
+      overflow: hidden; 
+    }
 
-    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .card-title { font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
-    .card-status { font-size: 0.7rem; color: #8b949e; white-space: nowrap; }
+    /* 🎨 내부에서 왼쪽->오른쪽으로 차오르는 20% 투명도 게이지 레이어 */
+    .card-fill-gauge {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .card-top, .card-mid { position: relative; z-index: 2; }
+
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .card-title { font-size: 0.78rem; font-weight: bold; white-space: nowrap; }
+    .card-status { font-size: 0.68rem; color: #8b949e; white-space: nowrap; }
 
     .card-mid { display: flex; align-items: baseline; justify-content: space-between; }
-    .card-odds { font-size: 0.92rem; font-weight: bold; color: #fff; }
-    .card-progress { font-size: 0.75rem; font-weight: bold; color: #64748b; }
+    .card-odds { font-size: 0.88rem; font-weight: bold; color: #fff; }
+    .card-progress { font-size: 0.72rem; font-weight: bold; color: #64748b; }
     .card-progress.has-hit { color: #f8fafc; text-shadow: 0 0 6px rgba(255,255,255,0.4); }
     .card-progress.complete { color: #34d399; text-shadow: 0 0 8px #34d399; }
 
-    .c1 .card-title { color: #00b4d8; } .c1.alive { border-color: #00b4d8; box-shadow: 0 0 10px rgba(0, 180, 216, 0.4); }
-    .c2 .card-title { color: #06d6a0; } .c2.alive { border-color: #06d6a0; box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); }
-    .c3 .card-title { color: #b5179e; } .c3.alive { border-color: #b5179e; box-shadow: 0 0 10px rgba(181, 23, 158, 0.4); }
-    .c4 .card-title { color: #f77f00; } .c4.alive { border-color: #f77f00; box-shadow: 0 0 10px rgba(247, 127, 0, 0.4); }
-    .c5 .card-title { color: #ffd166; } .c5.alive { border-color: #ffd166; box-shadow: 0 0 10px rgba(255, 209, 102, 0.4); }
-    .c6 .card-title { color: #ec4899; } .c6.alive { border-color: #ec4899; box-shadow: 0 0 10px rgba(236, 72, 153, 0.4); }
+    /* 조합별 고유 컬러 */
+    .c1 .card-title { color: #00b4d8; } .c1.alive { border-color: #00b4d8; box-shadow: 0 0 8px rgba(0, 180, 216, 0.4); }
+    .c2 .card-title { color: #06d6a0; } .c2.alive { border-color: #06d6a0; box-shadow: 0 0 8px rgba(6, 214, 160, 0.4); }
+    .c3 .card-title { color: #b5179e; } .c3.alive { border-color: #b5179e; box-shadow: 0 0 8px rgba(181, 23, 158, 0.4); }
+    .c4 .card-title { color: #f77f00; } .c4.alive { border-color: #f77f00; box-shadow: 0 0 8px rgba(247, 127, 0, 0.4); }
+    .c5 .card-title { color: #ffd166; } .c5.alive { border-color: #ffd166; box-shadow: 0 0 8px rgba(255, 209, 102, 0.4); }
+    .c6 .card-title { color: #ec4899; } .c6.alive { border-color: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.4); }
+    .c7 .card-title { color: #38bdf8; } .c7.alive { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+
+    /* 각 조합별 20% 투명도 게이지 색상 연결 */
+    .c1 .card-fill-gauge { background: rgba(0, 180, 216, 0.22); }
+    .c2 .card-fill-gauge { background: rgba(6, 214, 160, 0.22); }
+    .c3 .card-fill-gauge { background: rgba(181, 23, 158, 0.22); }
+    .c4 .card-fill-gauge { background: rgba(247, 127, 0, 0.22); }
+    .c5 .card-fill-gauge { background: rgba(255, 209, 102, 0.22); }
+    .c6 .card-fill-gauge { background: rgba(236, 72, 153, 0.22); }
+    .c7 .card-fill-gauge { background: rgba(56, 189, 248, 0.22); }
+
+    /* 1개 남았을 때 (막폴) 두근두근 펄스 애니메이션 */
+    @keyframes pulseCard {
+      0% { box-shadow: 0 0 6px rgba(251, 191, 36, 0.4); border-color: #f59e0b; }
+      50% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.85); border-color: #fbbf24; }
+      100% { box-shadow: 0 0 6px rgba(251, 191, 36, 0.4); border-color: #f59e0b; }
+    }
+    .card.match-point {
+      animation: pulseCard 1.3s infinite ease-in-out;
+    }
+    .card.match-point .card-status {
+      color: #fbbf24 !important;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+    }
 
     .card.failed { opacity: 0.25; border-color: #23314f !important; text-decoration: line-through; box-shadow: none !important; }
     .card.failed .card-status { color: #f85149; }
-    .card.all-win { background: #1a4731; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
+    .card.failed .card-fill-gauge { opacity: 0; }
+    .card.all-win { background: #1a4731 !important; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
     .card.all-win .card-status { color: #34d399; font-weight: bold; }
+    .card.all-win .card-fill-gauge { width: 100% !important; background: rgba(46, 160, 67, 0.35) !important; }
 
     .scrollable-body {
       flex: 1;
@@ -106,7 +179,40 @@
     .scrollable-body::-webkit-scrollbar-track { background: transparent; }
 
     .match-list { display: flex; flex-direction: column; gap: 10px; }
-    .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; }
+    .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; transition: all 0.25s ease; }
+
+    .match-card.card-hit {
+      border-color: #059669 !important;
+      box-shadow: 0 0 12px rgba(5, 150, 105, 0.35) !important;
+      background: #102122 !important;
+      opacity: 1 !important;
+    }
+
+    .match-card.all-combos-dead:not(.card-hit) {
+      opacity: 0.35;
+      filter: grayscale(0.85);
+      border-color: #1e2433 !important;
+    }
+
+    .match-card.all-combos-dead:not(.card-hit) .team-home,
+    .match-card.all-combos-dead:not(.card-hit) .team-away {
+      text-decoration: line-through !important;
+      text-decoration-color: #fb7185 !important;
+      text-decoration-thickness: 2px !important;
+    }
+
+    .match-card.all-combos-dead.card-hit .team-home,
+    .match-card.all-combos-dead.card-hit .team-away {
+      text-decoration: line-through !important;
+      text-decoration-color: #f43f5e !important;
+      text-decoration-thickness: 2.5px !important;
+    }
+
+    .match-card.card-fail {
+      opacity: 0.55;
+      background: #17141d;
+      border-color: #3b2028;
+    }
 
     .match-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .match-meta { font-size: 0.78rem; color: #7d8590; display: flex; align-items: center; gap: 6px; }
@@ -120,38 +226,104 @@
     .bg-c4 { background: #f77f00; }
     .bg-c5 { background: #ffd166; color: #111; }
     .bg-c6 { background: #ec4899; }
+    .bg-c7 { background: #38bdf8; }
 
     .match-teams { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; font-weight: bold; }
     .team-home { flex: 1; font-size: 0.98rem; text-align: left; color: #f0f6fc; }
-    .vs-text { font-size: 0.75rem; color: #6e7681; margin: 0 10px; }
+    .vs-text { font-size: 0.75rem; color: #6e7681; margin: 0 8px; }
     .team-away { flex: 1; font-size: 0.98rem; text-align: right; color: #f0f6fc; }
+    
+    .btn-fold-toggle {
+      margin-left: 10px;
+      background: #1c263c;
+      border: 1px solid #2b3a58;
+      color: #94a3b8;
+      border-radius: 4px;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.68rem;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      text-decoration: none !important;
+    }
+    .btn-fold-toggle:hover { color: #fff; background: #263554; }
+
+    .match-card.is-collapsed { padding: 8px 14px; }
+    .match-card.is-collapsed .match-header-row,
+    .match-card.is-collapsed .bet-bottom-row { display: none; }
+    .match-card.is-collapsed .match-teams { margin-bottom: 0; }
 
     .bet-bottom-row { display: flex; align-items: center; gap: 8px; }
 
-    .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1.1; }
-    .bet-slot { background: #0c121e; border: 1px solid #1a253a; border-radius: 6px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .slot-label { font-size: 0.7rem; color: #525f7a; }
-    .slot-odd { font-size: 0.82rem; color: #525f7a; font-weight: bold; }
+    .slots-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; flex: 1.25; }
+    .bet-slot-btn { 
+      background: #0c121e; 
+      border: 1px solid #1a253a; 
+      border-radius: 6px; 
+      height: 44px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: inherit;
+    }
+    .bet-slot-btn:active { transform: scale(0.96); }
+    .slot-label { font-size: 0.7rem; color: #64748b; }
+    .slot-odd { font-size: 0.82rem; color: #64748b; font-weight: bold; }
 
-    .bet-slot.my-pick { border-width: 1.5px; border-color: #2563eb; background: #112240; }
-    .bet-slot.my-pick .slot-label { color: #93c5fd; font-weight: bold; }
-    .bet-slot.my-pick .slot-odd { color: #60a5fa; }
+    .bet-slot-btn.my-pick { border-width: 1.5px; border-color: #2563eb; background: #112240; }
+    .bet-slot-btn.my-pick .slot-label { color: #93c5fd; font-weight: bold; }
+    .bet-slot-btn.my-pick .slot-odd { color: #60a5fa; }
 
-    .bet-slot.my-pick.is-hit { background: #064e3b; border-color: #059669; }
-    .bet-slot.my-pick.is-hit .slot-label { color: #a7f3d0; }
-    .bet-slot.my-pick.is-hit .slot-odd { color: #34d399; }
+    .bet-slot-btn.selected-result {
+      background: #334155;
+      border-color: #64748b;
+    }
+    .bet-slot-btn.selected-result .slot-label { color: #f1f5f9; }
+    .bet-slot-btn.selected-result .slot-odd { color: #fff; }
 
-    .bet-slot.my-pick.is-fail { background: #4c1d24; border-color: #e11d48; opacity: 0.6; }
-    .bet-slot.my-pick.is-fail .slot-label { color: #fecdd3; }
-    .bet-slot.my-pick.is-fail .slot-odd { color: #fb7185; }
+    .bet-slot-btn.my-pick.is-hit { 
+      background: #064e3b !important; 
+      border-color: #34d399 !important; 
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.4); 
+    }
+    .bet-slot-btn.my-pick.is-hit .slot-label { color: #a7f3d0; }
+    .bet-slot-btn.my-pick.is-hit .slot-odd { color: #34d399; }
 
-    .status-btns-group { display: flex; gap: 4px; flex: 0.9; }
-    .btn-status { height: 44px; border-radius: 6px; font-weight: bold; font-size: 0.78rem; border: 1px solid #23314f; background: #131b2e; color: #64748b; cursor: pointer; flex: 1; transition: all 0.2s ease; }
-    .btn-status.btn-wait { flex: 0.75; font-size: 0.72rem; }
+    .bet-slot-btn.my-pick.is-fail { 
+      background: #4c1d24 !important; 
+      border-color: #e11d48 !important; 
+      opacity: 0.65; 
+    }
+    .bet-slot-btn.my-pick.is-fail .slot-label { color: #fecdd3; }
+    .bet-slot-btn.my-pick.is-fail .slot-odd { color: #fb7185; }
 
-    .btn-status.active-hit { background: #059669 !important; border-color: #34d399 !important; color: #fff !important; box-shadow: 0 0 12px #059669; }
-    .btn-status.active-fail { background: #e11d48 !important; border-color: #fb7185 !important; color: #fff !important; box-shadow: 0 0 12px #e11d48; }
-    .btn-status.active-wait { background: #334155 !important; border-color: #64748b !important; color: #f1f5f9 !important; }
+    .btn-reset-match {
+      height: 44px;
+      width: 58px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.76rem;
+      border: 1px solid #23314f;
+      background: #131b2e;
+      color: #79c0ff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .btn-reset-match:hover { background: #1a253d; border-color: #3b527e; }
+    .btn-reset-match:active { transform: scale(0.95); }
+    .btn-reset-match.is-waiting { color: #475569; border-color: #1a2436; background: #0c121e; }
   </style>
 </head>
 <body>
@@ -159,7 +331,10 @@
   <div class="app-container">
     <div class="fixed-header-section">
       <div class="header">
-        <div class="title">프로토 132회차</div>
+        <div class="title-wrap">
+          <div class="title">프로토 132회차</div>
+          <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
+        </div>
         <div class="header-btns">
           <button class="btn-action btn-main" onclick="simulateNext()">자동입력</button>
           <button class="btn-action btn-reset" onclick="resetAll()">초기화</button>
@@ -169,28 +344,39 @@
 
       <div class="cards-grid">
         <div id="card-1" class="card c1 alive">
+          <div class="card-fill-gauge" id="gauge-1"></div>
           <div class="card-top"><span class="card-title">조합 1</span><span class="card-status" id="st-1">진행중</span></div>
           <div class="card-mid"><span class="card-odds">76.9배</span><span class="card-progress" id="prog-1">0/5</span></div>
         </div>
         <div id="card-2" class="card c2 alive">
+          <div class="card-fill-gauge" id="gauge-2"></div>
           <div class="card-top"><span class="card-title">조합 2</span><span class="card-status" id="st-2">진행중</span></div>
           <div class="card-mid"><span class="card-odds">18.0배</span><span class="card-progress" id="prog-2">0/4</span></div>
         </div>
         <div id="card-3" class="card c3 alive">
+          <div class="card-fill-gauge" id="gauge-3"></div>
           <div class="card-top"><span class="card-title">조합 3</span><span class="card-status" id="st-3">진행중</span></div>
           <div class="card-mid"><span class="card-odds">37.5배</span><span class="card-progress" id="prog-3">0/4</span></div>
         </div>
         <div id="card-4" class="card c4 alive">
+          <div class="card-fill-gauge" id="gauge-4"></div>
           <div class="card-top"><span class="card-title">조합 4</span><span class="card-status" id="st-4">진행중</span></div>
           <div class="card-mid"><span class="card-odds">17.7배</span><span class="card-progress" id="prog-4">0/4</span></div>
         </div>
         <div id="card-5" class="card c5 alive">
+          <div class="card-fill-gauge" id="gauge-5"></div>
           <div class="card-top"><span class="card-title">조합 5</span><span class="card-status" id="st-5">진행중</span></div>
           <div class="card-mid"><span class="card-odds">25.2배</span><span class="card-progress" id="prog-5">0/4</span></div>
         </div>
         <div id="card-6" class="card c6 alive">
+          <div class="card-fill-gauge" id="gauge-6"></div>
           <div class="card-top"><span class="card-title">조합 6</span><span class="card-status" id="st-6">진행중</span></div>
           <div class="card-mid"><span class="card-odds">40.8배</span><span class="card-progress" id="prog-6">0/4</span></div>
+        </div>
+        <div id="card-7" class="card c7 alive">
+          <div class="card-fill-gauge" id="gauge-7"></div>
+          <div class="card-top"><span class="card-title">조합 7</span><span class="card-status" id="st-7">진행중</span></div>
+          <div class="card-mid"><span class="card-odds">40.3배</span><span class="card-progress" id="prog-7">0/4</span></div>
         </div>
       </div>
     </div>
@@ -201,6 +387,14 @@
   </div>
 
   <script>
+    // 🔗 수파베이스 설정 (대장님 고유 프로젝트 연동)
+    const SUPABASE_URL = "https://ioqxulvuasjsabcvikug.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G";
+    const TABLE_NAME = "bet";
+    const CURRENT_ROUND = "132";
+
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
     const matches = [
       { id: "m1", time: "11.07 04:30", league: "분데스리가", type: "승무패", home: "함부르크", away: "묀헨글라트바흐", pickTarget: "home", odd: "2.22", combs: [1, 3] },
       { id: "m2", time: "11.07 04:45", league: "리그1", type: "승무패", home: "툴루즈", away: "RC스트라스부르", pickTarget: "home", odd: "1.93", combs: [1, 2, 3, 4] },
@@ -209,53 +403,153 @@
       { id: "m5", time: "11.07 15:00", league: "J1리그", type: "승무패", home: "FC도쿄", away: "가시마 앤틀러스", pickTarget: "home", odd: "1.95", combs: [1, 4, 6] },
       { id: "m6", time: "11.07 15:00", league: "J1리그", type: "H-1.0", home: "FC도쿄", away: "가시마 앤틀러스", pickTarget: "home", odd: "3.70", combs: [3] },
       { id: "m7", time: "11.07 21:30", league: "챔피언십", type: "승무패", home: "브리스톨 시티", away: "노리치 시티", pickTarget: "away", odd: "2.33", combs: [1, 4] },
-      { id: "m8", time: "11.07 23:30", league: "분데스리가", type: "H-1.0", home: "RB라이프치히", away: "아우크스부르크", pickTarget: "home", odd: "2.01", combs: [4] },
-      { id: "m9", time: "11.08 06:00", league: "MLS", type: "승무패", home: "올랜도 시티SC", away: "뉴잉글랜드 레벌루션", pickTarget: "away", odd: "2.90", combs: [6] },
-      { id: "m10", time: "11.08 09:00", league: "MLS", type: "H+1.0", home: "오스틴FC", away: "포틀랜드 팀버스", pickTarget: "draw", odd: "3.70", combs: [6] },
-      { id: "m11", time: "11.08 09:00", league: "MLS", type: "승무패", home: "FC댈러스", away: "콜로라도 래피즈", pickTarget: "home", odd: "1.95", combs: [6] },
-      { id: "m12", time: "11.09 01:15", league: "리그1", type: "승무패", home: "스타드 브레스트29", away: "올랭피크 리옹", pickTarget: "away", odd: "2.24", combs: [2, 5] },
-      { id: "m13", time: "11.09 04:00", league: "에레디비시", type: "승무패", home: "위트레흐트", away: "NEC네이메헌", pickTarget: "home", odd: "2.18", combs: [2, 5] },
-      { id: "m14", time: "11.09 04:45", league: "세리에A", type: "승무패", home: "ACF피오렌티나", away: "유벤투스", pickTarget: "away", odd: "1.91", combs: [2, 5] },
-      { id: "m15", time: "11.09 04:45", league: "리그1", type: "승무패", home: "RC랑스", away: "올랭피크드 마르세유", pickTarget: "away", odd: "2.70", combs: [5] }
+      { id: "m8", time: "11.07 21:30", league: "챔피언십", type: "승무패", home: "렉섬", away: "울버햄튼", pickTarget: "away", odd: "2.10", combs: [7] },
+      { id: "m9", time: "11.07 21:30", league: "EPL", type: "승무패", home: "리즈 유나이티드", away: "토트남", pickTarget: "away", odd: "2.40", combs: [7] },
+      { id: "m10", time: "11.07 23:30", league: "분데스리가", type: "H-1.0", home: "RB라이프치히", away: "아우크스부르크", pickTarget: "home", odd: "2.01", combs: [4] },
+      { id: "m11", time: "11.08 06:00", league: "MLS", type: "승무패", home: "올랜도 시티SC", away: "뉴잉글랜드 레벌루션", pickTarget: "away", odd: "2.90", combs: [6] },
+      { id: "m12", time: "11.08 09:00", league: "MLS", type: "H+1.0", home: "오스틴FC", away: "포틀랜드 팀버스", pickTarget: "draw", odd: "3.70", combs: [6] },
+      { id: "m13", time: "11.08 09:00", league: "MLS", type: "승무패", home: "FC댈러스", away: "콜로라도 래피즈", pickTarget: "home", odd: "1.95", combs: [6] },
+      { id: "m14", time: "11.08 09:00", league: "MLS", type: "H-1.0", home: "FC댈러스", away: "콜로라도 래피즈", pickTarget: "home", odd: "3.60", combs: [7] },
+      { id: "m15", time: "11.08 14:00", league: "J1리그", type: "승무패", home: "FC마치다 젤비아", away: "산프레체 히로시마", pickTarget: "away", odd: "2.22", combs: [7] },
+      { id: "m16", time: "11.09 01:15", league: "리그1", type: "승무패", home: "스타드 브레스트29", away: "올랭피크 리옹", pickTarget: "away", odd: "2.24", combs: [2, 5] },
+      { id: "m17", time: "11.09 04:00", league: "에레디비시", type: "승무패", home: "위트레흐트", away: "NEC네이메헌", pickTarget: "home", odd: "2.18", combs: [2, 5] },
+      { id: "m18", time: "11.09 04:45", league: "세리에A", type: "승무패", home: "ACF피오렌티나", away: "유벤투스", pickTarget: "away", odd: "1.91", combs: [2, 5] },
+      { id: "m19", time: "11.09 04:45", league: "리그1", type: "승무패", home: "RC랑스", away: "올랭피크 마르세유", pickTarget: "away", odd: "2.70", combs: [5] }
     ];
 
-    const TOTAL_COMBS = 6;
-    let state = JSON.parse(localStorage.getItem('proto_132_fix') || '{}');
+    const TOTAL_COMBS = 7;
+    let state = JSON.parse(localStorage.getItem('proto_132_fix_v2') || '{}');
+    let collapsed = JSON.parse(localStorage.getItem('proto_132_collapsed') || '{}');
+
+    // 동기화 애니메이션 제어
+    function flashSyncDot() {
+      const dot = document.getElementById('syncDot');
+      if (!dot) return;
+      dot.classList.add('syncing');
+      setTimeout(() => dot.classList.remove('syncing'), 450);
+    }
+
+    // 🚀 수파베이스에 상태 저장
+    async function pushStateToCloud() {
+      flashSyncDot();
+      if (!supabaseClient) return;
+      try {
+        // 기존 회차 레코드 있는지 조회 후 upsert
+        const { data, error: selectErr } = await supabaseClient
+          .from(TABLE_NAME)
+          .select('id')
+          .eq('round', CURRENT_ROUND)
+          .maybeSingle();
+
+        if (data && data.id) {
+          await supabaseClient
+            .from(TABLE_NAME)
+            .update({ state: state })
+            .eq('id', data.id);
+        } else {
+          await supabaseClient
+            .from(TABLE_NAME)
+            .insert([{ round: CURRENT_ROUND, state: state }]);
+        }
+      } catch (err) {
+        console.error('클라우드 저장 오류:', err);
+      }
+    }
+
+    // 🚀 수파베이스 초기 데이터 로드 및 실시간 구독
+    async function initSupabaseSync() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data } = await supabaseClient
+          .from(TABLE_NAME)
+          .select('state')
+          .eq('round', CURRENT_ROUND)
+          .maybeSingle();
+
+        if (data && data.state && Object.keys(data.state).length > 0) {
+          state = data.state;
+          localStorage.setItem('proto_132_fix_v2', JSON.stringify(state));
+          render();
+        }
+      } catch (err) {
+        console.error('초기 데이터 로딩 오류:', err);
+      }
+
+      // 실시간 수신 구독
+      supabaseClient
+        .channel('proto-realtime-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, payload => {
+          if (payload.new && payload.new.round === CURRENT_ROUND) {
+            flashSyncDot();
+            state = payload.new.state || {};
+            localStorage.setItem('proto_132_fix_v2', JSON.stringify(state));
+            render();
+          }
+        })
+        .subscribe();
+    }
+
+    function getComboStatusMap() {
+      const comboStatus = {};
+      for (let c = 1; c <= TOTAL_COMBS; c++) {
+        const cMatches = matches.filter(m => m.combs.includes(c));
+        const hasFail = cMatches.some(m => {
+          const res = state[m.id]?.outcome;
+          return res && res !== m.pickTarget;
+        });
+        comboStatus[c] = !hasFail;
+      }
+      return comboStatus;
+    }
 
     function render() {
       const list = document.getElementById('matchList');
       list.innerHTML = '';
+      const comboStatus = getComboStatusMap();
 
       matches.forEach(m => {
-        const cur = state[m.id] || 0;
+        const curOutcome = state[m.id]?.outcome || null;
+        const isHit = curOutcome && curOutcome === m.pickTarget;
+        const isFail = curOutcome && curOutcome !== m.pickTarget;
+        const isCollapsed = !!collapsed[m.id];
+
+        const allAssociatedCombosDead = m.combs.every(c => comboStatus[c] === false);
         const combsHtml = m.combs.map(c => `<div class="c-badge bg-c${c}">${c}</div>`).join('');
 
         const slotsHtml = ['home', 'draw', 'away'].map((t, idx) => {
           const label = ['승', '무', '패'][idx];
-          if (m.pickTarget === t) {
-            const hitClass = cur === 1 ? 'is-hit' : (cur === 2 ? 'is-fail' : '');
-            return `
-              <div class="bet-slot my-pick ${hitClass}">
-                <div class="slot-label">${label}</div>
-                <div class="slot-odd">${m.odd}</div>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="bet-slot">
-                <div class="slot-label">${label}</div>
-                <div class="slot-odd">-</div>
-              </div>
-            `;
+          const isMyPick = (m.pickTarget === t);
+          const isSelected = (curOutcome === t);
+
+          let slotClass = 'bet-slot-btn';
+          if (isMyPick) slotClass += ' my-pick';
+          if (isSelected) {
+            slotClass += ' selected-result';
+            if (isMyPick && isHit) slotClass += ' is-hit';
           }
+          if (isMyPick && isFail) {
+            slotClass += ' is-fail';
+          }
+
+          return `
+            <div class="${slotClass}" onclick="pickOutcome('${m.id}', '${t}')">
+              <div class="slot-label">${label}</div>
+              <div class="slot-odd">${isMyPick ? m.odd : '-'}</div>
+            </div>
+          `;
         }).join('');
 
-        const actHit = cur === 1 ? 'active-hit' : '';
-        const actFail = cur === 2 ? 'active-fail' : '';
-        const actWait = cur === 0 ? 'active-wait' : '';
-
         const card = document.createElement('div');
-        card.className = 'match-card';
+        let cardClasses = ['match-card'];
+        
+        if (isHit) cardClasses.push('card-hit');
+        else if (isFail) cardClasses.push('card-fail');
+
+        if (allAssociatedCombosDead) cardClasses.push('all-combos-dead');
+        if (isCollapsed) cardClasses.push('is-collapsed');
+        card.className = cardClasses.join(' ');
+
         card.innerHTML = `
           <div class="match-header-row">
             <div class="match-meta">
@@ -268,63 +562,99 @@
             <span class="team-home">${m.home}</span>
             <span class="vs-text">VS</span>
             <span class="team-away">${m.away}</span>
+            <button class="btn-fold-toggle" onclick="toggleCollapse('${m.id}')" title="접기/펼치기">
+              ${isCollapsed ? '▼' : '▲'}
+            </button>
           </div>
           <div class="bet-bottom-row">
             <div class="slots-container">${slotsHtml}</div>
-            <div class="status-btns-group">
-              <button class="btn-status ${actHit}" onclick="setStatus('${m.id}', 1)">적중</button>
-              <button class="btn-status ${actFail}" onclick="setStatus('${m.id}', 2)">낙첨</button>
-              <button class="btn-status btn-wait ${actWait}" onclick="setStatus('${m.id}', 0)">대기</button>
-            </div>
+            <button class="btn-reset-match ${!curOutcome ? 'is-waiting' : ''}" onclick="clearOutcome('${m.id}')">
+              대기
+            </button>
           </div>
         `;
         list.appendChild(card);
       });
 
-      updateCards();
+      updateCards(comboStatus);
     }
 
-    function setStatus(id, val) {
-      state[id] = val;
-      localStorage.setItem('proto_132_fix', JSON.stringify(state));
+    function pickOutcome(id, outcome) {
+      if (!state[id]) state[id] = {};
+      state[id].outcome = outcome;
+      localStorage.setItem('proto_132_fix_v2', JSON.stringify(state));
+      render();
+      pushStateToCloud();
+    }
+
+    function clearOutcome(id) {
+      if (state[id]) {
+        delete state[id];
+        localStorage.setItem('proto_132_fix_v2', JSON.stringify(state));
+        render();
+        pushStateToCloud();
+      }
+    }
+
+    function toggleCollapse(id) {
+      collapsed[id] = !collapsed[id];
+      localStorage.setItem('proto_132_collapsed', JSON.stringify(collapsed));
       render();
     }
 
     function resetAll() {
-      if (confirm('모든 경기 마킹을 초기 상태로 되돌릴까?')) {
+      if (confirm('모든 경기 결과를 대기 상태로 초기화할까?')) {
         state = {};
-        localStorage.removeItem('proto_132_fix');
+        localStorage.removeItem('proto_132_fix_v2');
         render();
+        pushStateToCloud();
       }
     }
 
     function simulateNext() {
-      const unassigned = matches.filter(m => (state[m.id] || 0) === 0);
+      const unassigned = matches.filter(m => !state[m.id]?.outcome);
       if (unassigned.length === 0) {
         alert('모든 경기가 이미 입력 완료되었어!');
         return;
       }
-      state[unassigned[0].id] = Math.random() < 0.75 ? 1 : 2;
-      localStorage.setItem('proto_132_fix', JSON.stringify(state));
-      render();
+      const target = unassigned[0];
+      if (Math.random() < 0.75) {
+        pickOutcome(target.id, target.pickTarget);
+      } else {
+        const others = ['home', 'draw', 'away'].filter(o => o !== target.pickTarget);
+        const wrong = others[Math.floor(Math.random() * others.length)];
+        pickOutcome(target.id, wrong);
+      }
     }
 
-    function updateCards() {
+    function updateCards(comboStatus) {
       for (let c = 1; c <= TOTAL_COMBS; c++) {
         const cMatches = matches.filter(m => m.combs.includes(c));
         const total = cMatches.length;
-        const hitCount = cMatches.filter(m => state[m.id] === 1).length;
-        const hasFail = cMatches.some(m => state[m.id] === 2);
+        const hitCount = cMatches.filter(m => {
+          const res = state[m.id]?.outcome;
+          return res && res === m.pickTarget;
+        }).length;
+        const hasFail = !comboStatus[c];
         const allHits = hitCount === total;
+        const remaining = total - hitCount;
 
         const card = document.getElementById(`card-${c}`);
         const stLabel = document.getElementById(`st-${c}`);
         const progLabel = document.getElementById(`prog-${c}`);
+        const gauge = document.getElementById(`gauge-${c}`);
 
         card.className = `card c${c}`;
         progLabel.textContent = `${hitCount}/${total}`;
         progLabel.className = 'card-progress';
 
+        // 🎯 맞춘 경기 비율만큼 게이지 채우기
+        const progressPercent = total > 0 ? (hitCount / total) * 100 : 0;
+        if (gauge) {
+          gauge.style.width = `${progressPercent}%`;
+        }
+
+        // 🎯 카드 상태별 스타일
         if (hasFail) {
           card.classList.add('failed');
           stLabel.textContent = '낙첨';
@@ -334,8 +664,15 @@
           progLabel.classList.add('complete');
         } else {
           card.classList.add('alive');
-          stLabel.textContent = '진행중';
           if (hitCount > 0) progLabel.classList.add('has-hit');
+
+          // 🔥 1경기 남았을 때 (막폴) 심장박동 펄스 효과
+          if (remaining === 1 && hitCount > 0) {
+            card.classList.add('match-point');
+            stLabel.textContent = '★막폴';
+          } else {
+            stLabel.textContent = '진행중';
+          }
         }
       }
     }
@@ -361,6 +698,7 @@
     }
 
     render();
+    initSupabaseSync();
   </script>
 </body>
 </html>
