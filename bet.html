@@ -57,6 +57,7 @@
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; }
 
+    /* 조합 카드 그리드 */
     .cards-grid { 
       display: grid; 
       grid-template-columns: repeat(4, 1fr); 
@@ -109,11 +110,11 @@
     .match-list { display: flex; flex-direction: column; gap: 10px; }
     .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; transition: all 0.25s ease; }
 
-    /* 맞춘 경기(적중): 초록 네온 발광 */
+    /* 맞춘 경기(적중): 초록 네온 발광 유지 */
     .match-card.card-hit {
       border-color: #059669 !important;
-      box-shadow: 0 0 12px rgba(5, 150, 105, 0.3) !important;
-      background: #112022 !important;
+      box-shadow: 0 0 12px rgba(5, 150, 105, 0.35) !important;
+      background: #102122 !important;
       opacity: 1 !important;
     }
 
@@ -124,13 +125,24 @@
       border-color: #1e2433 !important;
     }
 
-    /* 🔥 핵심: 조합이 전멸한 경기는 '발광 중인 맞춘 경기'라도 팀명에 취소선 표시! */
-    .match-card.all-combos-dead .team-home,
-    .match-card.all-combos-dead .team-away {
+    /* 🔥 핵심: 취소선 색상 업그레이드! */
+    /* 1. 대기/낙첨인데 조합 전멸된 경기: 붉은/로즈톤 취소선 */
+    .match-card.all-combos-dead:not(.card-hit) .team-home,
+    .match-card.all-combos-dead:not(.card-hit) .team-away {
       text-decoration: line-through !important;
+      text-decoration-color: #fb7185 !important;
+      text-decoration-thickness: 2px !important;
     }
 
-    /* 맞추지 못하고 이미 끝난 경기(낙첨) */
+    /* 2. 적중했지만 조합이 이미 부러진 경기: 선명한 네온 레드 2.5px 취소선으로 강렬한 시각적 대비! */
+    .match-card.all-combos-dead.card-hit .team-home,
+    .match-card.all-combos-dead.card-hit .team-away {
+      text-decoration: line-through !important;
+      text-decoration-color: #f43f5e !important;
+      text-decoration-thickness: 2.5px !important;
+    }
+
+    /* 맞추지 못하고 끝난 일반 낙첨 경기 */
     .match-card.card-fail {
       opacity: 0.55;
       background: #17141d;
@@ -350,7 +362,6 @@
         const isFail = curOutcome && curOutcome !== m.pickTarget;
         const isCollapsed = !!collapsed[m.id];
 
-        // 해당 경기가 속한 모든 조합이 전멸했는지 여부
         const allAssociatedCombosDead = m.combs.every(c => comboStatus[c] === false);
 
         const combsHtml = m.combs.map(c => `<div class="c-badge bg-c${c}">${c}</div>`).join('');
@@ -381,17 +392,10 @@
         const card = document.createElement('div');
         let cardClasses = ['match-card'];
         
-        if (isHit) {
-          cardClasses.push('card-hit'); // 적중 시 초록 발광 유지
-        } else if (isFail) {
-          cardClasses.push('card-fail');
-        }
+        if (isHit) cardClasses.push('card-hit');
+        else if (isFail) cardClasses.push('card-fail');
 
-        // 조합이 전멸한 경우 클래스 부여 (CSS에서 .all-combos-dead .team-home에 취소선 적용됨)
-        if (allAssociatedCombosDead) {
-          cardClasses.push('all-combos-dead');
-        }
-
+        if (allAssociatedCombosDead) cardClasses.push('all-combos-dead');
         if (isCollapsed) cardClasses.push('is-collapsed');
         card.className = cardClasses.join(' ');
 
