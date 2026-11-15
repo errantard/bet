@@ -27,7 +27,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>프로토 135-2회차</title>
+  <title>프로토 135-3회차</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -490,7 +490,7 @@
     <div class="fixed-header-section">
       <div class="header">
         <div class="title-wrap">
-          <div class="title">프로토 135-2회차</div>
+          <div class="title">프로토 135-3회차</div>
           <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
         </div>
         <div class="header-btns">
@@ -535,28 +535,24 @@
     const SUPABASE_URL = "https://ioqxulvuasjsabcvikug.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G";
     const TABLE_NAME = "bet";
-    const CURRENT_ROUND = "135-2";
+    const CURRENT_ROUND = "135-3";
     const STATE_KEY = `proto_${CURRENT_ROUND}_state`;
     const COLLAPSE_KEY = `proto_${CURRENT_ROUND}_collapsed`;
 
     const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     const comboInfo = {
-      1: { odd: 36.9, betAmount: 15000 },
-      2: { odd: 40.9, betAmount: 15000 },
-      3: { odd: 20.9, betAmount: 20000 },
-      4: { odd: 21.3, betAmount: 20000 }
+      1: { odd: 16.4, betAmount: 15000 },
+      2: { odd: 54.0, betAmount: 15000 }
     };
 
     const matches = [
-      { id: "m1", time: "11.15 14:00", league: "일본 리그컵", type: "승무패", home: "FC마치다 젤비아", away: "비셀 고베", pickTarget: "home", odd: "2.29", combs: [1, 2, 3, 4] },
-      { id: "m2", time: "11.15 14:00", league: "일본 J2리그", type: "승무패", home: "카탈레 도야마", away: "도쿠시마 보르티스", pickTarget: "home", odd: "1.67", combs: [3] },
-      { id: "m3", time: "11.15 14:00", league: "일본 J2리그", type: "H-1.0", home: "카탈레 도야마", away: "도쿠시마 보르티스", pickTarget: "home", odd: "2.95", combs: [1, 2, 4] },
-      { id: "m4", time: "11.15 14:00", league: "일본 J2리그", type: "H+1.0", home: "FC이마바리", away: "주빌로 이와타", pickTarget: "draw", odd: "3.25", combs: [2] },
-      { id: "m5", time: "11.15 15:00", league: "일본 리그컵", type: "승무패", home: "가시마 앤틀러스", away: "요코하마 F마리노스", pickTarget: "home", odd: "1.73", combs: [1, 3, 4] },
-      { id: "m6", time: "11.15 17:00", league: "일본 리그컵", type: "승무패", home: "가시와 레이솔", away: "가와사키 프론탈레", pickTarget: "home", odd: "1.82", combs: [4] },
-      { id: "m7", time: "11.15 17:00", league: "일본 리그컵", type: "H-1.0", home: "가시와 레이솔", away: "가와사키 프론탈레", pickTarget: "home", odd: "3.15", combs: [1, 3] },
-      { id: "m8", time: "11.16 02:00", league: "UEFA 네이션스리그", type: "승무패", home: "벨라루스", away: "알바니아", pickTarget: "away", odd: "1.86", combs: [2] }
+      { id: "m1", time: "11.15 17:00", league: "일본 리그컵", type: "승무패", home: "가시와 레이솔", away: "가와사키 프론탈레", pickTarget: "home", odd: "1.77", combs: [1] },
+      { id: "m2", time: "11.15 17:00", league: "일본 리그컵", type: "H-1.0", home: "가시와 레이솔", away: "가와사키 프론탈레", pickTarget: "home", odd: "3.40", combs: [2] },
+      { id: "m3", time: "11.15 23:00", league: "UEFA 네이션스리그", type: "승무패", home: "라트비아", away: "아르메니아", pickTarget: "home", odd: "2.80", combs: [1, 2] },
+      { id: "m4", time: "11.16 02:00", league: "UEFA 네이션스리그", type: "승무패", home: "벨라루스", away: "알바니아", pickTarget: "away", odd: "1.86", combs: [1] },
+      { id: "m5", time: "11.16 02:00", league: "UEFA 네이션스리그", type: "H+1.0", home: "벨라루스", away: "알바니아", pickTarget: "draw", odd: "3.20", combs: [2] },
+      { id: "m6", time: "11.16 04:45", league: "UEFA 네이션스리그", type: "승무패", home: "스페인", away: "잉글랜드", pickTarget: "home", odd: "1.77", combs: [1, 2] }
     ];
 
     const TOTAL_COMBS = Object.keys(comboInfo).length;
