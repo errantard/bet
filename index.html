@@ -66,6 +66,7 @@
       box-shadow: 0 0 8px #10b981;
       transition: all 0.3s;
     }
+    .sync-indicator.error { background: #f43f5e; box-shadow: 0 0 8px #f43f5e; }
     .sync-indicator.syncing {
       background: #f59e0b;
       box-shadow: 0 0 10px #f59e0b;
@@ -173,7 +174,7 @@
       text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
     }
 
-    .card.failed { opacity: 0.25; border-color: #23314f !important; text-decoration: line-through; box-shadow: none !important; }
+    .card.failed { opacity: 0.45; border-color: #23314f !important; text-decoration: line-through; box-shadow: none !important; }
     .card.failed .card-status { color: #f85149; }
     .card.failed .card-fill-gauge { opacity: 0; }
     .card.all-win { background: #1a4731 !important; border-color: #2ea043 !important; box-shadow: 0 0 14px #2ea043 !important; }
@@ -324,11 +325,6 @@
       opacity: 1 !important;
     }
 
-    .match-card.all-combos-dead:not(.card-hit) {
-      opacity: 0.35;
-      filter: grayscale(0.85);
-      border-color: #1e2433 !important;
-    }
 
     .match-card.all-combos-dead:not(.card-hit) .team-home,
     .match-card.all-combos-dead:not(.card-hit) .team-away {
@@ -345,9 +341,14 @@
     }
 
     .match-card.card-fail {
-      opacity: 0.55;
       background: #17141d;
       border-color: #3b2028;
+    }
+    /* 실패 경기: 내용만 살짝 흐리게, 대기 버튼은 정상 표시 (실수 클릭 되돌리기용) */
+    .match-card.card-fail .match-header-row,
+    .match-card.card-fail .match-teams,
+    .match-card.card-fail .slots-container {
+      opacity: 0.6;
     }
 
     .match-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -561,15 +562,25 @@
           .eq('round', CURRENT_ROUND)
           .maybeSingle();
 
+        let res;
         if (data && data.id) {
-          await supabaseClient
+          res = await supabaseClient
             .from(TABLE_NAME)
             .update({ state: state })
             .eq('id', data.id);
         } else {
-          await supabaseClient
+          res = await supabaseClient
             .from(TABLE_NAME)
             .insert([{ round: CURRENT_ROUND, state: state }]);
+        }
+        const dot = document.getElementById('syncDot');
+        if (res && res.error) {
+          console.error('클라우드 저장 실패:', res.error);
+          dot && dot.classList.add('error');
+          dot && (dot.title = '저장 실패: ' + res.error.message);
+        } else {
+          dot && dot.classList.remove('error');
+          dot && (dot.title = '실시간 클라우드 연결됨');
         }
       } catch (err) {
         console.error('클라우드 저장 오류:', err);
