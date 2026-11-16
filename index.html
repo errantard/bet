@@ -777,8 +777,6 @@
     async function sendResult() {
       const s = computeSummary();
       if (s.pending > 0 && !confirm(`아직 진행중인 조합이 ${s.pending}개 있어.\n그래도 지금 결과로 전송할까?`)) return;
-      const sign = s.profit >= 0 ? '+' : '';
-      if (!confirm(`${s.round}회차 결과 전송할까?\n\n총투자 ${s.invest.toLocaleString()}원\n적중 ${s.hitCombos.length}/${s.totalCombos}조합\n당첨금 ${s.payout.toLocaleString()}원\n실적 ${sign}${s.profit.toLocaleString()}원\n\n(같은 회차를 다시 보내면 덮어써져)`)) return;
       if (!supabaseClient) { alert('클라우드 연결이 안 돼서 전송 못 했어'); return; }
 
       flashSyncDot();
@@ -790,7 +788,18 @@
           .maybeSingle();
         if (selErr) throw selErr;
 
-        const rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows.filter(r => r.round !== s.round) : [];
+        const rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows : [];
+
+        // 같은 회차가 이미 있으면 136-2, 136-3 … 으로 추가 저장 (덮어쓰지 않음)
+        const base = s.round;
+        let label = base, n = 2;
+        while (rows.some(r => r.round === label)) { label = `${base}-${n}`; n++; }
+        s.round = label;
+
+        const sign = s.profit >= 0 ? '+' : '';
+        const dupNote = label !== base ? `\n\n※ ${base}회가 이미 있어서 ${label}회로 따로 저장돼` : '';
+        if (!confirm(`${label}회차 결과 전송할까?\n\n총투자 ${s.invest.toLocaleString()}원\n적중 ${s.hitCombos.length}/${s.totalCombos}조합\n당첨금 ${s.payout.toLocaleString()}원\n실적 ${sign}${s.profit.toLocaleString()}원${dupNote}`)) return;
+
         delete s.pending;
         rows.push(s);
 
