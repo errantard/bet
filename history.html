@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>프로토 실적</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b0f19">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #070a12; color: #c9d1d9; }
+    body { display: flex; justify-content: center; }
+
+    .app-container {
+      width: 100%; max-width: 760px; height: 100%;
+      background: #0b0f19; display: flex; flex-direction: column;
+      border-left: 1px solid #162032; border-right: 1px solid #162032;
+    }
+
+    .fixed-header-section {
+      flex-shrink: 0; padding: 14px 14px 10px 14px; background: #0b0f19; z-index: 100;
+      border-bottom: 2px solid #1e293f; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .title-wrap { display: flex; align-items: center; gap: 8px; }
+    .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
+
+    .sync-indicator { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; transition: all 0.3s; }
+    .sync-indicator.syncing { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; transform: scale(1.3); }
+
+    .header-btns { display: flex; gap: 6px; align-items: center; }
+    .btn-action { height: 34px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+    .btn-action:active { transform: scale(0.95); }
+    .btn-main { width: 68px; background: #1a2438; border: 1px solid #2b3a58; color: #79c0ff; }
+
+    /* 누적 요약 카드 (트래커 조합 카드와 동일 스타일) */
+    .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+    @media (min-width: 620px) { .cards-grid { grid-template-columns: repeat(4, 1fr); } }
+    .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 7px 8px; }
+    .card-title { font-size: 0.72rem; font-weight: bold; color: #8b949e; margin-bottom: 4px; }
+    .card-val { font-size: 0.95rem; font-weight: bold; color: #fff; white-space: nowrap; }
+    .card.c-invest { border-color: #00b4d8; box-shadow: 0 0 8px rgba(0, 180, 216, 0.3); }
+    .card.c-invest .card-title { color: #00b4d8; }
+    .card.c-payout { border-color: #ffd166; box-shadow: 0 0 8px rgba(255, 209, 102, 0.3); }
+    .card.c-payout .card-title { color: #ffd166; }
+    .card.c-profit .card-title { color: #c084fc; }
+    .card.c-profit { border-color: #c084fc; box-shadow: 0 0 8px rgba(192, 132, 252, 0.3); }
+    .card.c-rate .card-title { color: #06d6a0; }
+    .card.c-rate { border-color: #06d6a0; box-shadow: 0 0 8px rgba(6, 214, 160, 0.3); }
+
+    .plus { color: #34d399 !important; }
+    .minus { color: #fb7185 !important; }
+
+    .scrollable-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px 60px 14px; }
+    .scrollable-body::-webkit-scrollbar { width: 6px; }
+    .scrollable-body::-webkit-scrollbar-thumb { background: #1e293f; border-radius: 4px; }
+
+    /* 회차 리스트 */
+    .row, .row-head {
+      display: grid;
+      grid-template-columns: 0.9fr 1.15fr 0.75fr 1.15fr 1.2fr 22px;
+      align-items: center; gap: 4px;
+    }
+    .row-head { font-size: 0.68rem; color: #7d8590; padding: 0 12px 6px 12px; }
+    .row-head span, .row span { text-align: right; }
+    .row-head span:first-child, .row span:first-child { text-align: left; }
+
+    .row-list { display: flex; flex-direction: column; gap: 8px; }
+    .row {
+      background: #131a2a; border: 1px solid #1e293f; border-radius: 10px;
+      padding: 11px 12px; font-size: 0.82rem; font-weight: bold; color: #e2e8f0;
+    }
+    .row.win { border-color: #059669; box-shadow: 0 0 10px rgba(5, 150, 105, 0.3); background: #102122; }
+    .row .r-round { color: #fff; font-size: 0.88rem; white-space: nowrap; }
+    .row span { white-space: nowrap; }
+    .row .r-hit { color: #94a3b8; }
+    .row.win .r-hit { color: #34d399; }
+    .r-del { background: transparent; border: none; color: #475569; font-size: 0.8rem; cursor: pointer; text-align: right; }
+    .r-del:hover { color: #fb7185; }
+
+    .empty { text-align: center; color: #64748b; font-size: 0.85rem; padding: 40px 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="fixed-header-section">
+      <div class="header">
+        <div class="title-wrap">
+          <div class="title">프로토 실적</div>
+          <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
+        </div>
+        <div class="header-btns">
+          <a class="btn-action btn-main" href="./">트래커</a>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card c-invest"><div class="card-title">누적 투자</div><div class="card-val" id="sumInvest">0원</div></div>
+        <div class="card c-payout"><div class="card-title">누적 당첨금</div><div class="card-val" id="sumPayout">0원</div></div>
+        <div class="card c-profit"><div class="card-title">누적 실적</div><div class="card-val" id="sumProfit">0원</div></div>
+        <div class="card c-rate"><div class="card-title">회수율</div><div class="card-val" id="sumRate">0%</div></div>
+      </div>
+    </div>
+
+    <div class="scrollable-body">
+      <div class="row-head">
+        <span>회차</span><span>총투자</span><span>적중</span><span>당첨금</span><span>실적</span><span></span>
+      </div>
+      <div class="row-list" id="rowList"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://ioqxulvuasjsabcvikug.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G";
+    const TABLE_NAME = "bet";
+    const HISTORY_ROUND = "__history__";
+
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+    let rows = [];
+    let rowId = null;
+
+    const won = n => `${Math.round(n).toLocaleString()}`;
+    const signed = n => (n > 0 ? '+' : '') + won(n);
+
+    function flashSyncDot() {
+      const dot = document.getElementById('syncDot');
+      dot.classList.add('syncing');
+      setTimeout(() => dot.classList.remove('syncing'), 450);
+    }
+
+    function render() {
+      const list = document.getElementById('rowList');
+      const sorted = [...rows].sort((a, b) => String(b.round).localeCompare(String(a.round), undefined, { numeric: true }));
+
+      if (sorted.length === 0) {
+        list.innerHTML = '<div class="empty">아직 전송된 회차가 없어<br>트래커에서 <b>전송</b>을 눌러줘</div>';
+      } else {
+        list.innerHTML = sorted.map(r => {
+          const win = r.hitCombos && r.hitCombos.length > 0;
+          const cls = r.profit > 0 ? 'plus' : (r.profit < 0 ? 'minus' : '');
+          return `
+          <div class="row${win ? ' win' : ''}">
+            <span class="r-round">${r.round}회</span>
+            <span>${won(r.invest)}</span>
+            <span class="r-hit">${(r.hitCombos || []).length}/${r.totalCombos}</span>
+            <span>${won(r.payout)}</span>
+            <span class="${cls}">${signed(r.profit)}</span>
+            <button class="r-del" onclick="deleteRow('${r.round}')" title="이 회차 삭제">✕</button>
+          </div>`;
+        }).join('');
+      }
+
+      const inv = rows.reduce((s, r) => s + (r.invest || 0), 0);
+      const pay = rows.reduce((s, r) => s + (r.payout || 0), 0);
+      const pro = pay - inv;
+      document.getElementById('sumInvest').textContent = `${won(inv)}원`;
+      document.getElementById('sumPayout').textContent = `${won(pay)}원`;
+      const p = document.getElementById('sumProfit');
+      p.textContent = `${signed(pro)}원`;
+      p.className = 'card-val ' + (pro > 0 ? 'plus' : (pro < 0 ? 'minus' : ''));
+      document.getElementById('sumRate').textContent = inv > 0 ? `${(pay / inv * 100).toFixed(1)}%` : '0%';
+    }
+
+    async function load() {
+      if (!supabaseClient) { render(); return; }
+      try {
+        const { data } = await supabaseClient
+          .from(TABLE_NAME).select('id, state').eq('round', HISTORY_ROUND).maybeSingle();
+        rowId = data ? data.id : null;
+        rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows : [];
+      } catch (err) {
+        console.error('불러오기 오류:', err);
+      }
+      render();
+
+      supabaseClient
+        .channel('proto-history-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, payload => {
+          if (payload.new && payload.new.round === HISTORY_ROUND) {
+            flashSyncDot();
+            rowId = payload.new.id;
+            rows = (payload.new.state && payload.new.state.rows) || [];
+            render();
+          }
+        })
+        .subscribe();
+    }
+
+    async function deleteRow(round) {
+      if (!confirm(`${round}회차 기록을 삭제할까?`)) return;
+      rows = rows.filter(r => r.round !== round);
+      render();
+      if (!supabaseClient || !rowId) return;
+      flashSyncDot();
+      try {
+        await supabaseClient.from(TABLE_NAME).update({ state: { rows } }).eq('id', rowId);
+      } catch (err) {
+        console.error('삭제 오류:', err);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
