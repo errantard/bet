@@ -84,6 +84,26 @@
     .r-del { background: transparent; border: none; color: #475569; font-size: 0.8rem; cursor: pointer; text-align: right; }
     .r-del:hover { color: #fb7185; }
 
+
+    /* 보기 탭 (회차 / 주간 / 월간) */
+    .view-tabs { display: flex; background: #0c121e; border: 1px solid #1f3352; border-radius: 6px; padding: 2px; gap: 2px; margin-left: 6px; }
+    .view-tab { border: none; background: transparent; color: #64748b; font-size: 0.72rem; font-weight: bold; padding: 5px 8px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+    .view-tab.active { background: #1a2438; color: #79c0ff; box-shadow: 0 0 6px rgba(56, 189, 248, 0.25); }
+
+    /* 실적 그래프 */
+    .chart-box { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 10px 12px 8px 12px; margin-bottom: 12px; }
+    .chart-title { font-size: 0.72rem; color: #8b949e; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .chart { display: flex; gap: 4px; height: 120px; position: relative; }
+    .chart-zero { position: absolute; left: 0; right: 0; height: 1px; background: #334155; }
+    .bar-col { flex: 1; position: relative; min-width: 0; }
+    .bar { position: absolute; left: 18%; right: 18%; border-radius: 3px; min-height: 2px; }
+    .bar.pos { background: linear-gradient(180deg, #34d399, #059669); box-shadow: 0 0 6px rgba(52, 211, 153, 0.4); }
+    .bar.neg { background: linear-gradient(180deg, #e11d48, #fb7185); opacity: 0.85; }
+    .chart-labels { display: flex; gap: 4px; margin-top: 5px; }
+    .chart-labels span { flex: 1; text-align: center; font-size: 0.6rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+    /* 기간(주간/월간) 행 */
+    .row.period, .row-head.period { grid-template-columns: 1.35fr 1fr 0.6fr 1fr 1.1fr; }
     .empty { text-align: center; color: #64748b; font-size: 0.85rem; padding: 40px 0; line-height: 1.6; }
   </style>
 </head>
@@ -94,6 +114,11 @@
         <div class="title-wrap">
           <div class="title">프로토 실적</div>
           <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
+          <div class="view-tabs">
+            <button class="view-tab active" data-view="round" onclick="setView('round')">회차</button>
+            <button class="view-tab" data-view="week" onclick="setView('week')">주간</button>
+            <button class="view-tab" data-view="month" onclick="setView('month')">월간</button>
+          </div>
         </div>
         <div class="header-btns">
           <a class="btn-action btn-main" href="./">트래커</a>
@@ -109,9 +134,12 @@
     </div>
 
     <div class="scrollable-body">
-      <div class="row-head">
-        <span>회차</span><span>총투자</span><span>적중</span><span>당첨금</span><span>실적</span><span></span>
+      <div class="chart-box" id="chartBox" style="display:none;">
+        <div class="chart-title"><span id="chartTitle">실적 추이</span><span id="chartRange"></span></div>
+        <div class="chart" id="chart"></div>
+        <div class="chart-labels" id="chartLabels"></div>
       </div>
+      <div class="row-head" id="rowHead"></div>
       <div class="row-list" id="rowList"></div>
     </div>
   </div>
@@ -135,14 +163,80 @@
       setTimeout(() => dot.classList.remove('syncing'), 450);
     }
 
+    let view = 'round';
+
+    function setView(v) {
+      view = v;
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+      render();
+    }
+
+    const pad = n => String(n).padStart(2, '0');
+    const sortRound = (a, b) => String(a.round).localeCompare(String(b.round), undefined, { numeric: true });
+
+    // 주간(월요일 시작) / 월간 묶기 — 기준: 전송한 날짜
+    function groupBy(type) {
+      const map = {};
+      rows.forEach(r => {
+        const d = new Date(r.sentAt || Date.now());
+        let key, label, short;
+        if (type === 'month') {
+          key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+          label = `${d.getFullYear()}.${pad(d.getMonth() + 1)}`;
+          short = `${d.getMonth() + 1}월`;
+        } else {
+          const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+          const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+          key = `${mon.getFullYear()}-${pad(mon.getMonth() + 1)}-${pad(mon.getDate())}`;
+          label = `${mon.getMonth() + 1}.${mon.getDate()}~${sun.getMonth() + 1}.${sun.getDate()}`;
+          short = `${mon.getMonth() + 1}.${mon.getDate()}`;
+        }
+        if (!map[key]) map[key] = { key, label, short, invest: 0, payout: 0, rounds: 0, hitRounds: 0 };
+        const g = map[key];
+        g.invest += r.invest || 0;
+        g.payout += r.payout || 0;
+        g.rounds += 1;
+        if (r.hitCombos && r.hitCombos.length > 0) g.hitRounds += 1;
+      });
+      return Object.values(map).map(g => ({ ...g, profit: g.payout - g.invest })).sort((a, b) => a.key.localeCompare(b.key));
+    }
+
+    function renderChart(items, title) {
+      const box = document.getElementById('chartBox');
+      if (items.length === 0) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      const last = items.slice(-12);
+      const maxPos = Math.max(0, ...last.map(i => i.profit));
+      const maxNeg = Math.max(0, ...last.map(i => -i.profit));
+      const span = (maxPos + maxNeg) || 1;
+      const zero = maxPos / span * 100;
+
+      document.getElementById('chartTitle').textContent = title;
+      document.getElementById('chartRange').textContent = items.length > 12 ? `최근 12개` : '';
+      document.getElementById('chart').innerHTML =
+        `<div class="chart-zero" style="top:${zero}%"></div>` +
+        last.map(i => {
+          const h = Math.abs(i.profit) / span * 100;
+          const top = i.profit >= 0 ? zero - h : zero;
+          return `<div class="bar-col" title="${i.label}: ${signed(i.profit)}원"><div class="bar ${i.profit >= 0 ? 'pos' : 'neg'}" style="top:${top}%;height:${h}%"></div></div>`;
+        }).join('');
+      document.getElementById('chartLabels').innerHTML = last.map(i => `<span>${i.short}</span>`).join('');
+    }
+
     function render() {
       const list = document.getElementById('rowList');
-      const sorted = [...rows].sort((a, b) => String(b.round).localeCompare(String(a.round), undefined, { numeric: true }));
+      const head = document.getElementById('rowHead');
 
-      if (sorted.length === 0) {
+      if (rows.length === 0) {
+        head.innerHTML = '';
+        document.getElementById('chartBox').style.display = 'none';
         list.innerHTML = '<div class="empty">아직 전송된 회차가 없어<br>트래커에서 <b>전송</b>을 눌러줘</div>';
-      } else {
-        list.innerHTML = sorted.map(r => {
+      } else if (view === 'round') {
+        head.className = 'row-head';
+        head.innerHTML = '<span>회차</span><span>총투자</span><span>적중</span><span>당첨금</span><span>실적</span><span></span>';
+        const asc = [...rows].sort(sortRound);
+        renderChart(asc.map(r => ({ label: `${r.round}회`, short: r.round, profit: r.profit })), '회차별 실적');
+        list.innerHTML = [...asc].reverse().map(r => {
           const win = r.hitCombos && r.hitCombos.length > 0;
           const cls = r.profit > 0 ? 'plus' : (r.profit < 0 ? 'minus' : '');
           return `
@@ -153,6 +247,22 @@
             <span>${won(r.payout)}</span>
             <span class="${cls}">${signed(r.profit)}</span>
             <button class="r-del" onclick="deleteRow('${r.round}')" title="이 회차 삭제">✕</button>
+          </div>`;
+        }).join('');
+      } else {
+        const groups = groupBy(view);
+        head.className = 'row-head period';
+        head.innerHTML = `<span>${view === 'week' ? '주간' : '월간'}</span><span>총투자</span><span>적중</span><span>당첨금</span><span>실적</span>`;
+        renderChart(groups, view === 'week' ? '주간 실적' : '월간 실적');
+        list.innerHTML = [...groups].reverse().map(g => {
+          const cls = g.profit > 0 ? 'plus' : (g.profit < 0 ? 'minus' : '');
+          return `
+          <div class="row period${g.profit > 0 ? ' win' : ''}">
+            <span class="r-round">${g.label}</span>
+            <span>${won(g.invest)}</span>
+            <span class="r-hit" title="적중 회차 / 전체 회차">${g.hitRounds}/${g.rounds}</span>
+            <span>${won(g.payout)}</span>
+            <span class="${cls}">${signed(g.profit)}</span>
           </div>`;
         }).join('');
       }
