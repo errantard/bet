@@ -171,8 +171,9 @@
     async function load() {
       if (!supabaseClient) { render(); return; }
       try {
-        const { data } = await supabaseClient
+        const { data, error } = await supabaseClient
           .from(TABLE_NAME).select('id, state').eq('round', HISTORY_ROUND).maybeSingle();
+        if (error) { document.getElementById('rowList').innerHTML = `<div class="empty">불러오기 오류: ${error.message}</div>`; return; }
         rowId = data ? data.id : null;
         rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows : [];
       } catch (err) {

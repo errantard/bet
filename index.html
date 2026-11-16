@@ -772,25 +772,29 @@
 
       flashSyncDot();
       try {
-        const { data } = await supabaseClient
+        const { data, error: selErr } = await supabaseClient
           .from(TABLE_NAME)
           .select('id, state')
           .eq('round', HISTORY_ROUND)
           .maybeSingle();
+        if (selErr) throw selErr;
 
         const rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows.filter(r => r.round !== s.round) : [];
         delete s.pending;
         rows.push(s);
 
+        let res;
         if (data && data.id) {
-          await supabaseClient.from(TABLE_NAME).update({ state: { rows } }).eq('id', data.id);
+          res = await supabaseClient.from(TABLE_NAME).update({ state: { rows } }).eq('id', data.id).select('id');
         } else {
-          await supabaseClient.from(TABLE_NAME).insert([{ round: HISTORY_ROUND, state: { rows } }]);
+          res = await supabaseClient.from(TABLE_NAME).insert([{ round: HISTORY_ROUND, state: { rows } }]).select('id');
         }
+        if (res.error) throw res.error;
+        if (!res.data || res.data.length === 0) throw new Error('저장이 반영 안 됨 (권한 정책 확인 필요)');
         if (confirm('전송 완료! 실적 페이지 볼래?')) location.href = 'history.html';
       } catch (err) {
         console.error('전송 오류:', err);
-        alert('전송 중 오류가 났어. 잠시 후 다시 해줘');
+        alert('전송 실패 😢\n' + (err && (err.message || err.details || err.code) || err));
       }
     }
 
