@@ -59,23 +59,22 @@
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; cursor: pointer; user-select: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
     .title-wrap { flex-shrink: 0; }
     .sync-indicator { flex-shrink: 0; }
-    .header-btns { flex-shrink: 0; }
+    .header { gap: 8px; }
     .total-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: bold; color: #38bdf8; background: #0f1d33; border: 1px solid #1f3a5f; border-radius: 999px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
     .total-chip .sync-indicator { width: 6px; height: 6px; box-shadow: 0 0 5px #10b981; }
     .total-chip.is-open { background: #13294a; border-color: #38bdf8; }
-    @media (max-width: 420px) {
+    @media (max-width: 460px) {
       .header { gap: 6px; }
       .title { font-size: 0.98rem; }
       .header-btns { gap: 4px; }
-      .header-btns .btn-main, .header-btns .btn-reset { width: 58px; }
-      .header-btns .btn-fs-icon { width: 32px; }
+      .header-btns .btn-fs-icon { flex-basis: 32px; width: 32px; }
     }
     @media (max-width: 380px) {
       .title { font-size: 0.92rem; }
       .title-wrap { gap: 5px; }
       .total-chip { padding: 3px 6px; gap: 4px; font-size: 0.68rem; }
-      .header-btns .btn-main, .header-btns .btn-reset { width: 46px; font-size: 0.74rem; }
-      .header-btns .btn-fs-icon { width: 30px; }
+      .header-btns .btn-main, .header-btns .btn-reset { font-size: 0.74rem; }
+      .header-btns .btn-fs-icon { flex-basis: 30px; width: 30px; }
     }
 
     /* 회차 제목 클릭 → 조합별 배팅금액 + 총배팅금액 */
@@ -113,6 +112,10 @@
     .btn-main { width: 68px; background: #1a2438; border: 1px solid #2b3a58; color: #79c0ff; }
     .btn-reset { width: 68px; background: #26161a; border: 1px solid #4e2429; color: #ff7b72; }
     .btn-fs-icon { width: 34px; background: #131d2e; border: 1px solid #1f3352; color: #38bdf8; font-size: 1rem; padding: 0; text-decoration: none; }
+    /* 화면이 좁으면 [전송]·[초기화]가 먼저 줄어들어서 오른쪽 버튼이 안 잘림 */
+    .header-btns { flex: 0 1 auto; min-width: 0; }
+    .header-btns .btn-main, .header-btns .btn-reset { width: auto; flex: 0 1 68px; min-width: 42px; padding: 0 4px; white-space: nowrap; }
+    .header-btns .btn-fs-icon { flex: 0 0 34px; }
     .btn-send { background: #10291f; border-color: #1f6e4a; color: #34d399; }
 
     .cards-grid {
