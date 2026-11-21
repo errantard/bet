@@ -55,18 +55,27 @@
     }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .title-wrap { display: flex; align-items: center; gap: 8px; }
+    .title-wrap { display: flex; align-items: center; gap: 7px; }
     .title { font-size: 1.05rem; font-weight: bold; color: #fff; cursor: pointer; user-select: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
-    .title::after { content: '▾'; font-size: 0.7rem; color: #7d8590; transition: transform 0.2s; }
-    .title.is-open::after { transform: rotate(180deg); }
     .title-wrap { flex-shrink: 0; }
     .sync-indicator { flex-shrink: 0; }
     .header-btns { flex-shrink: 0; }
+    .total-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: bold; color: #38bdf8; background: #0f1d33; border: 1px solid #1f3a5f; border-radius: 999px; padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+    .total-chip .sync-indicator { width: 6px; height: 6px; box-shadow: 0 0 5px #10b981; }
+    .total-chip.is-open { background: #13294a; border-color: #38bdf8; }
     @media (max-width: 420px) {
+      .header { gap: 6px; }
       .title { font-size: 0.98rem; }
       .header-btns { gap: 4px; }
-      .header-btns .btn-main, .header-btns .btn-reset { width: 50px; }
+      .header-btns .btn-main, .header-btns .btn-reset { width: 58px; }
       .header-btns .btn-fs-icon { width: 32px; }
+    }
+    @media (max-width: 380px) {
+      .title { font-size: 0.92rem; }
+      .title-wrap { gap: 5px; }
+      .total-chip { padding: 3px 6px; gap: 4px; font-size: 0.68rem; }
+      .header-btns .btn-main, .header-btns .btn-reset { width: 46px; font-size: 0.74rem; }
+      .header-btns .btn-fs-icon { width: 30px; }
     }
 
     /* 회차 제목 클릭 → 조합별 배팅금액 + 총배팅금액 */
@@ -498,7 +507,7 @@
       <div class="header">
         <div class="title-wrap">
           <div class="title" id="roundTitle" onclick="toggleTotalPanel()" title="총배팅금액 보기">프로토</div>
-          <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
+          <span class="total-chip" id="totalChip" onclick="toggleTotalPanel()"><span class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></span><span id="totalChipAmt">총 -</span></span>
         </div>
         <div class="header-btns">
           <button class="btn-action btn-main btn-send" onclick="sendResult()">전송</button>
@@ -856,7 +865,8 @@
       const panel = document.getElementById('totalPanel');
       const title = document.getElementById('roundTitle');
       if (!panel) return;
-      title && title.classList.toggle('is-open', totalPanelOpen);
+      const chip = document.getElementById('totalChip');
+      chip && chip.classList.toggle('is-open', totalPanelOpen);
       if (!totalPanelOpen) { panel.style.display = 'none'; return; }
 
       let invest = 0, alivePayout = 0, winPayout = 0;
@@ -1072,6 +1082,9 @@
 
       document.title = `프로토 ${CURRENT_ROUND}회차`;
       document.getElementById('roundTitle').textContent = `프로토 ${CURRENT_ROUND}회차`;
+      const totalInvest = Object.values(comboInfo).reduce((a, v) => a + (v.betAmount || 0), 0);
+      const man = Math.round(totalInvest / 1000) / 10;
+      document.getElementById('totalChipAmt').textContent = `총 ${man.toLocaleString()}만`;
 
       buildCards();
       render();
