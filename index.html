@@ -56,7 +56,21 @@
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title-wrap { display: flex; align-items: center; gap: 8px; }
-    .title { font-size: 1.05rem; font-weight: bold; color: #fff; }
+    .title { font-size: 1.05rem; font-weight: bold; color: #fff; cursor: pointer; user-select: none; }
+    .title::after { content: ' ▾'; font-size: 0.75rem; color: #7d8590; }
+    .title.is-open::after { content: ' ▴'; }
+
+    /* 회차 제목 클릭 → 조합별 배팅금액 + 총배팅금액 */
+    .total-panel { margin-top: 10px; background: #111a2e; border: 1px solid #233659; border-radius: 8px; padding: 8px 12px; animation: slideDown 0.22s ease-out; }
+    .total-row { display: grid; grid-template-columns: 1fr 0.8fr 1.1fr 1.3fr; gap: 6px; align-items: center; font-size: 0.78rem; padding: 4px 0; border-bottom: 1px solid #1a253c; color: #cbd5e1; }
+    .total-row.head { color: #7d8590; font-size: 0.68rem; }
+    .total-row span:not(:first-child) { text-align: right; }
+    .total-row.is-fail { opacity: 0.45; }
+    .total-row.is-win span:last-child { color: #34d399; font-weight: bold; }
+    .total-sum { display: flex; justify-content: space-between; align-items: center; padding-top: 7px; font-weight: bold; }
+    .total-sum .lbl { color: #94a3b8; font-size: 0.8rem; }
+    .total-sum .val { color: #38bdf8; font-size: 1rem; }
+    .total-sub { display: flex; justify-content: space-between; font-size: 0.72rem; color: #7d8590; padding-top: 3px; }
 
     .sync-indicator {
       width: 8px;
@@ -474,7 +488,7 @@
     <div class="fixed-header-section">
       <div class="header">
         <div class="title-wrap">
-          <div class="title" id="roundTitle">프로토</div>
+          <div class="title" id="roundTitle" onclick="toggleTotalPanel()" title="총배팅금액 보기">프로토</div>
           <div class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></div>
         </div>
         <div class="header-btns">
@@ -486,6 +500,9 @@
       </div>
 
       <div class="cards-grid" id="cardsGrid"></div>
+
+      <!-- 회차 제목 클릭 시 열리는 총배팅금액 패널 -->
+      <div id="totalPanel" class="total-panel" style="display: none;"></div>
 
       <!-- 조합 클릭 시 열리는 슬라이드 서랍 -->
       <div id="comboDetailDrawer" class="combo-drawer" style="display: none;">
@@ -818,7 +835,49 @@
       }
     }
 
+    let totalPanelOpen = false;
+
+    function toggleTotalPanel() {
+      totalPanelOpen = !totalPanelOpen;
+      if (totalPanelOpen && activeDrawerCombo !== null) closeDrawer();
+      renderTotalPanel(getComboStatusMap());
+    }
+
+    function renderTotalPanel(comboStatus) {
+      const panel = document.getElementById('totalPanel');
+      const title = document.getElementById('roundTitle');
+      if (!panel) return;
+      title && title.classList.toggle('is-open', totalPanelOpen);
+      if (!totalPanelOpen) { panel.style.display = 'none'; return; }
+
+      let invest = 0, alivePayout = 0, winPayout = 0;
+      const rows = Object.keys(comboInfo).map(k => {
+        const c = Number(k);
+        const info = comboInfo[c];
+        const amt = info.betAmount || 0;
+        const payout = Math.round(amt * info.odd);
+        const cMatches = matches.filter(m => m.combs.includes(c));
+        const allHits = cMatches.length > 0 && cMatches.every(m => state[m.id]?.outcome === m.pickTarget);
+        const hasFail = !comboStatus[c];
+        invest += amt;
+        if (allHits) winPayout += payout;
+        if (!hasFail) alivePayout += payout;
+        const cls = allHits ? 'is-win' : (hasFail ? 'is-fail' : '');
+        const tail = allHits ? `${payout.toLocaleString()}원 ✓` : (hasFail ? '낙첨' : `${payout.toLocaleString()}원`);
+        return `<div class="total-row ${cls}"><span>조합 ${c}</span><span>${info.odd}배</span><span>${amt.toLocaleString()}원</span><span>${tail}</span></div>`;
+      }).join('');
+
+      panel.innerHTML = `
+        <div class="total-row head"><span>조합</span><span>배당</span><span>배팅금액</span><span>적중 시</span></div>
+        ${rows}
+        <div class="total-sum"><span class="lbl">총배팅금액 (${Object.keys(comboInfo).length}조합)</span><span class="val">${invest.toLocaleString()}원</span></div>
+        <div class="total-sub"><span>살아있는 조합 최대 당첨금</span><span>${alivePayout.toLocaleString()}원</span></div>
+        ${winPayout > 0 ? `<div class="total-sub" style="color:#34d399;"><span>적중 확정 당첨금</span><span>${winPayout.toLocaleString()}원</span></div>` : ''}`;
+      panel.style.display = 'block';
+    }
+
     function updateCards(comboStatus) {
+      renderTotalPanel(comboStatus);
       for (let c = 1; c <= TOTAL_COMBS; c++) {
         const cMatches = matches.filter(m => m.combs.includes(c));
         const total = cMatches.length;
@@ -874,6 +933,7 @@
         closeDrawer();
       } else {
         activeDrawerCombo = comboNum;
+        totalPanelOpen = false;
         const comboStatus = getComboStatusMap();
         renderDrawer(comboNum, comboStatus);
         updateCards(comboStatus);
