@@ -683,8 +683,13 @@
         const allAssociatedCombosDead = m.combs.every(c => comboStatus[c] === false);
         const combsHtml = m.combs.map(c => `<div class="c-badge bg-c${c}${comboStatus[c] === false ? ' dead' : ''}">${c}</div>`).join('');
 
+        // 언더오버: 승=언더(home) / 패=오버(away), 가운데 칸은 비활성
+        const isUO = /언더|오버|U\/O/.test(m.type);
         const slotsHtml = ['home', 'draw', 'away'].map((t, idx) => {
-          const label = ['승', '무', '패'][idx];
+          const label = (isUO ? ['언더', '-', '오버'] : ['승', '무', '패'])[idx];
+          if (isUO && t === 'draw') {
+            return `<div class="bet-slot-btn" style="opacity:0.35;cursor:default;"><div class="slot-label">-</div><div class="slot-odd">-</div></div>`;
+          }
           const isMyPick = (m.pickTarget === t);
           const isSelected = (curOutcome === t);
 
@@ -1031,7 +1036,8 @@
         if (isHit) { badgeClass = 'd-pick-badge hit'; badgeTxt = '적중'; }
         else if (isFail) { badgeClass = 'd-pick-badge fail'; badgeTxt = '실패'; }
 
-        const pickKor = { home: '홈승', draw: '무승부', away: '원정승' }[m.pickTarget] || m.pickTarget;
+        const isUO = /언더|오버|U\/O/.test(m.type);
+        const pickKor = (isUO ? { home: '언더', away: '오버' } : { home: '홈승', draw: '무승부', away: '원정승' })[m.pickTarget] || m.pickTarget;
 
         const row = document.createElement('div');
         row.className = 'drawer-match-item';
