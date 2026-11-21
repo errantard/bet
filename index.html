@@ -56,9 +56,18 @@
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .title-wrap { display: flex; align-items: center; gap: 8px; }
-    .title { font-size: 1.05rem; font-weight: bold; color: #fff; cursor: pointer; user-select: none; }
-    .title::after { content: ' ▾'; font-size: 0.75rem; color: #7d8590; }
-    .title.is-open::after { content: ' ▴'; }
+    .title { font-size: 1.05rem; font-weight: bold; color: #fff; cursor: pointer; user-select: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+    .title::after { content: '▾'; font-size: 0.7rem; color: #7d8590; transition: transform 0.2s; }
+    .title.is-open::after { transform: rotate(180deg); }
+    .title-wrap { flex-shrink: 0; }
+    .sync-indicator { flex-shrink: 0; }
+    .header-btns { flex-shrink: 0; }
+    @media (max-width: 420px) {
+      .title { font-size: 0.98rem; }
+      .header-btns { gap: 4px; }
+      .header-btns .btn-main, .header-btns .btn-reset { width: 50px; }
+      .header-btns .btn-fs-icon { width: 32px; }
+    }
 
     /* 회차 제목 클릭 → 조합별 배팅금액 + 총배팅금액 */
     .total-panel { margin-top: 10px; background: #111a2e; border: 1px solid #233659; border-radius: 8px; padding: 8px 12px; animation: slideDown 0.22s ease-out; }
