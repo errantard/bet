@@ -639,7 +639,10 @@
     let activeDrawerCombo = null;
     // 낙첨 숨기기 (조합·경기 한 번에) — 기본 켬, 폰에 기억
     let hideDead = localStorage.getItem('proto_hide_dead') !== '0';
+    // 이번 화면에서 결과를 건드린 경기 — 낙첨돼도 바로 숨기지 않음 (새로고침/낙첨 카드 토글 시 정리)
+    const touched = new Set();
     function toggleHideDead() {
+      touched.clear();
       hideDead = !hideDead;
       localStorage.setItem('proto_hide_dead', hideDead ? '1' : '0');
       render();
@@ -737,7 +740,7 @@
       const comboStatus = getComboStatusMap();
 
       matches.forEach(m => {
-        if (hideDead && m.combs.every(c => comboStatus[c] === false)) return;
+        if (hideDead && !touched.has(m.id) && m.combs.every(c => comboStatus[c] === false)) return;
         const curOutcome = state[m.id]?.outcome || null;
         const isHit = curOutcome && curOutcome === m.pickTarget;
         const isFail = curOutcome && curOutcome !== m.pickTarget;
@@ -818,6 +821,7 @@
     }
 
     function pickOutcome(id, outcome) {
+      touched.add(id);
       if (!state[id]) state[id] = {};
       state[id].outcome = outcome;
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
@@ -826,6 +830,7 @@
     }
 
     function clearOutcome(id) {
+      touched.add(id);
       if (state[id]) {
         delete state[id];
         localStorage.setItem(STATE_KEY, JSON.stringify(state));
