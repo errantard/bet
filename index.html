@@ -353,6 +353,19 @@
     .match-list { display: flex; flex-direction: column; gap: 10px; }
     .match-card { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 11px 14px; transition: all 0.25s ease; }
 
+    /* 맞춘 경기 + 조합 살아있음 → 노란 테두리 */
+    .match-card.card-hit.hit-live {
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.45) !important;
+      background: #1d1a10 !important;
+    }
+
+    /* 낙첨 숨김: 조합 자리에 들어가는 요약 카드 + 경기 목록 위 요약 바 */
+    .card.dead-toggle { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; border-style: dashed; border-color: #3b2a33; background: #120f17; }
+    .card.dead-toggle .dt-num { font-size: 0.82rem; font-weight: bold; color: #fb7185; }
+    .card.dead-toggle .dt-sub { font-size: 0.66rem; color: #7d8590; }
+    .card.dead-hidden { display: none; }
+
     .match-card.card-hit {
       border-color: #059669 !important;
       box-shadow: 0 0 12px rgba(5, 150, 105, 0.35) !important;
@@ -577,11 +590,21 @@
           <div class="card-top"><span class="card-title">조합 ${c}</span><span class="card-status" id="st-${c}">진행중</span></div>
           <div class="card-mid"><span class="card-odds">${comboInfo[c].odd.toFixed(1)}배</span><span class="card-progress" id="prog-${c}">0/${total}</span></div>
         </div>`;
-      }).join('');
+      }).join('') + `
+        <div id="deadToggleCard" class="card dead-toggle" onclick="toggleHideDead()" style="display:none;">
+          <span class="dt-num" id="dtNum"></span><span class="dt-sub" id="dtSub"></span>
+        </div>`;
     }
     let state = {};
     let collapsed = {};
     let activeDrawerCombo = null;
+    // 낙첨 숨기기 (조합·경기 한 번에) — 기본 켬, 폰에 기억
+    let hideDead = localStorage.getItem('proto_hide_dead') !== '0';
+    function toggleHideDead() {
+      hideDead = !hideDead;
+      localStorage.setItem('proto_hide_dead', hideDead ? '1' : '0');
+      render();
+    }
 
     function flashSyncDot() {
       const dot = document.getElementById('syncDot');
@@ -675,6 +698,7 @@
       const comboStatus = getComboStatusMap();
 
       matches.forEach(m => {
+        if (hideDead && m.combs.every(c => comboStatus[c] === false)) return;
         const curOutcome = state[m.id]?.outcome || null;
         const isHit = curOutcome && curOutcome === m.pickTarget;
         const isFail = curOutcome && curOutcome !== m.pickTarget;
@@ -715,6 +739,7 @@
         let cardClasses = ['match-card'];
 
         if (isHit) cardClasses.push('card-hit');
+        if (isHit && !allAssociatedCombosDead) cardClasses.push('hit-live');
         else if (isFail) cardClasses.push('card-fail');
 
         if (allAssociatedCombosDead) cardClasses.push('all-combos-dead');
@@ -905,6 +930,13 @@
 
     function updateCards(comboStatus) {
       renderTotalPanel(comboStatus);
+      const deadCombos = Object.keys(comboInfo).filter(k => !comboStatus[Number(k)]).length;
+      const dtCard = document.getElementById('deadToggleCard');
+      if (dtCard) {
+        dtCard.style.display = deadCombos > 0 ? '' : 'none';
+        document.getElementById('dtNum').textContent = `낙첨 ${deadCombos}`;
+        document.getElementById('dtSub').textContent = hideDead ? '펼치기 ▾' : '접기 ▴';
+      }
       for (let c = 1; c <= TOTAL_COMBS; c++) {
         const cMatches = matches.filter(m => m.combs.includes(c));
         const total = cMatches.length;
@@ -922,6 +954,7 @@
         const gauge = document.getElementById(`gauge-${c}`);
 
         card.className = `card c${c}`;
+        if (hideDead && hasFail) card.classList.add('dead-hidden');
         if (activeDrawerCombo === c) {
           card.classList.add('is-selected');
         }
@@ -973,6 +1006,26 @@
       if (drawer) drawer.style.display = 'none';
       const comboStatus = getComboStatusMap();
       updateCards(comboStatus);
+    }
+
+    // 픽 표기: 승무패 → 홈승/무승부/원정승, 핸디 → H-1 승/무/패, 언더오버 → 언더 3.5/오버 3.5
+    function pickLabel(m) {
+      const t = m.type || '';
+      const uo = t.match(/U\/O\s*([\d.]+)/);
+      if (uo || /언더|오버/.test(t)) {
+        const line = uo ? ' ' + uo[1] : '';
+        return (m.pickTarget === 'away' ? '오버' : '언더') + line;
+      }
+      const h = t.match(/H\s*([+-][\d.]+)/);
+      if (h) {
+        // 내 픽 기준: 그 팀이 어떻게 돼야 맞는지 (±1 핸디)
+        const v = parseFloat(h[1]);
+        if (v === -1) return { home: '홈 2점차↑', draw: '홈 1점차승', away: '원정 무·승' }[m.pickTarget] || m.pickTarget;
+        if (v === 1) return { home: '홈 무·승', draw: '원정 1점차승', away: '원정 2점차↑' }[m.pickTarget] || m.pickTarget;
+        const hs = (v > 0 ? '+' : '') + v;
+        return `H${hs} ` + ({ home: '승', draw: '무', away: '패' }[m.pickTarget] || m.pickTarget);
+      }
+      return { home: '홈승', draw: '무승부', away: '원정승' }[m.pickTarget] || m.pickTarget;
     }
 
     function renderDrawer(comboNum, comboStatus) {
@@ -1036,8 +1089,7 @@
         if (isHit) { badgeClass = 'd-pick-badge hit'; badgeTxt = '적중'; }
         else if (isFail) { badgeClass = 'd-pick-badge fail'; badgeTxt = '실패'; }
 
-        const isUO = /언더|오버|U\/O/.test(m.type);
-        const pickKor = (isUO ? { home: '언더', away: '오버' } : { home: '홈승', draw: '무승부', away: '원정승' })[m.pickTarget] || m.pickTarget;
+        const pickKor = pickLabel(m);
 
         const row = document.createElement('div');
         row.className = 'drawer-match-item';
