@@ -144,9 +144,18 @@
     }
     .card:active { transform: scale(0.97); }
 
+    /* 선택된 조합: 흰 빛 테두리 + 살짝 떠오름 + 아래 ▼ (자리 차지 없음, 카드 사이 틈에 겹쳐 그림) */
     .card.is-selected {
-      outline: 2px solid #38bdf8;
-      outline-offset: 1px;
+      overflow: visible;
+      transform: translateY(-3px);
+      box-shadow: 0 0 0 2px #fff, 0 0 14px rgba(255, 255, 255, 0.5) !important;
+      z-index: 3;
+    }
+    .card.is-selected .card-fill-gauge { border-radius: 8px; }
+    .card.is-selected::after {
+      content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
+      border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid #fff;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8)); z-index: 5; pointer-events: none;
     }
 
     .card-fill-gauge {
