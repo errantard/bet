@@ -1035,8 +1035,8 @@
       if (h) {
         // 내 픽 기준: 그 팀이 어떻게 돼야 맞는지 (±1 핸디)
         const v = parseFloat(h[1]);
-        if (v === -1) return { home: '홈 2점차↑', draw: '홈 1점차승', away: '원정 무·승' }[m.pickTarget] || m.pickTarget;
-        if (v === 1) return { home: '홈 무·승', draw: '원정 1점차승', away: '원정 2점차↑' }[m.pickTarget] || m.pickTarget;
+        if (v === -1) return { home: '홈 2점차↑', draw: '홈 1점차승', away: '원정 승·무' }[m.pickTarget] || m.pickTarget;
+        if (v === 1) return { home: '홈 승·무', draw: '원정 1점차승', away: '원정 2점차↑' }[m.pickTarget] || m.pickTarget;
         const hs = (v > 0 ? '+' : '') + v;
         return `H${hs} ` + ({ home: '승', draw: '무', away: '패' }[m.pickTarget] || m.pickTarget);
       }
