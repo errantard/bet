@@ -592,7 +592,22 @@
     // ▼ 회차 데이터는 round.js에서 불러옴 (이 파일은 수정할 필요 없음)
     let CURRENT_ROUND, STATE_KEY, COLLAPSE_KEY, comboInfo, matches, TOTAL_COMBS;
 
+    // 16번 이후 조합 색 자동 생성 (1~15번은 CSS에 고정 색)
+    function ensureComboColors() {
+      const nums = Object.keys(comboInfo).map(Number).filter(c => c > 15);
+      if (!nums.length) return;
+      let el = document.getElementById('autoComboColors');
+      if (!el) { el = document.createElement('style'); el.id = 'autoComboColors'; document.head.appendChild(el); }
+      el.textContent = nums.map(c => {
+        const h = Math.round((c * 137.508) % 360);
+        const col = `hsl(${h}, 80%, 64%)`;
+        return `.c${c} .card-title { color: ${col}; } .c${c}.alive { border-color: ${col}; box-shadow: 0 0 8px hsla(${h}, 80%, 64%, 0.4); }
+.c${c} .card-fill-gauge { background: hsla(${h}, 80%, 64%, 0.22); } .bg-c${c} { background: ${col}; color: #111; }`;
+      }).join('\n');
+    }
+
     function buildCards() {
+      ensureComboColors();
       const grid = document.getElementById('cardsGrid');
       grid.style.setProperty('--cols-m', Math.min(TOTAL_COMBS, 4));
       grid.style.setProperty('--cols-w', Math.min(TOTAL_COMBS, 7));
