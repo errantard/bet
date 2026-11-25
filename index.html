@@ -1,8 +1,8 @@
 <!--
 [고정 파일 — 매 회차 수정 금지]
 이 bet.html은 디자인/Supabase 동기화 코드만 담고 있음.
-회차별 경기·조합 데이터는 같은 폴더의 round.js에서 불러옴.
-→ 새 회차는 round.js만 교체해서 깃허브에 덮어쓰면 됨.
+회차별 경기·조합 데이터는 같은 폴더의 round.js에서 불러옴 (window.ROUNDS 배열, 진행중 회차 여러 개 가능).
+→ 새 회차는 round.js만 수정해서 깃허브에 덮어쓰면 됨.
 -->
 <!DOCTYPE html>
 <html lang="ko">
@@ -538,15 +538,23 @@
     .btn-reset-match:hover { background: #1a253d; border-color: #3b527e; }
     .btn-reset-match:active { transform: scale(0.95); }
     .btn-reset-match.is-waiting { color: #475569; border-color: #1a2436; background: #0c121e; }
+    /* 회차 선택 메뉴 (진행중 회차 2개 이상일 때) */
+    .title .round-caret { font-size: 0.7em; color: #94a3b8; margin-left: 1px; }
+    .round-menu { position: absolute; z-index: 60; top: 44px; left: 10px; min-width: 190px; background: #111a2b; border: 1px solid #26354f; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,0.55); padding: 6px; }
+    .round-menu-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #e2e8f0; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+    .round-menu-item:active { background: #1b2740; }
+    .round-menu-item.is-current { background: #16233a; color: #38bdf8; }
+    .round-menu-item .rm-sub { font-size: 0.72rem; color: #94a3b8; font-weight: normal; }
+    .round-menu-item.is-current .rm-sub { color: #7dd3fc; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
     <div class="fixed-header-section">
-      <div class="header">
+      <div class="header" style="position: relative;">
         <div class="title-wrap">
-          <div class="title" id="roundTitle" onclick="toggleTotalPanel()" title="총배팅금액 보기">프로토</div>
+          <div class="title" id="roundTitle" onclick="onTitleClick(event)" title="회차 선택">프로토</div>
           <span class="total-chip" id="totalChip" onclick="toggleTotalPanel()"><span class="sync-indicator" id="syncDot" title="실시간 클라우드 연결됨"></span><span id="totalChipAmt">총 -</span></span>
         </div>
         <div class="header-btns">
@@ -556,6 +564,8 @@
           <button class="btn-action btn-fs-icon" onclick="toggleFullscreen()" id="fsBtn" title="전체화면">⛶</button>
         </div>
       </div>
+
+      <div id="roundMenu" class="round-menu" style="display: none;"></div>
 
       <div class="cards-grid" id="cardsGrid"></div>
 
@@ -1172,11 +1182,89 @@
       }
     }
 
+    // ===== 회차 선택 (round.js에 진행중 회차 여러 개 가능) =====
+    // round.js 형식: window.ROUNDS = [ {round,combos,matches}, ... ]  (예전 window.ROUND_DATA 하나짜리도 지원)
+    const SEL_KEY = 'proto_sel_round', SEEN_KEY = 'proto_seen_max';
+    let ALL_ROUNDS = [], sentRounds = new Set(), roundMenuOpen = false;
+
+    function pickRound() {
+      const list = Array.isArray(window.ROUNDS) ? window.ROUNDS : (window.ROUND_DATA ? [window.ROUND_DATA] : []);
+      ALL_ROUNDS = list.filter(r => r && r.round).sort((a, b) => Number(a.round) - Number(b.round));
+      if (!ALL_ROUNDS.length) return null;
+      const newest = ALL_ROUNDS[ALL_ROUNDS.length - 1];
+      const seen = Number(localStorage.getItem(SEEN_KEY) || 0);
+      // 새 회차가 올라오면 자동으로 최신 회차부터 보여줌
+      if (Number(newest.round) > seen) {
+        localStorage.setItem(SEEN_KEY, newest.round);
+        localStorage.setItem(SEL_KEY, newest.round);
+        return newest;
+      }
+      const sel = localStorage.getItem(SEL_KEY);
+      return ALL_ROUNDS.find(r => String(r.round) === sel) || newest;
+    }
+
+    function visibleRounds() {
+      // 전송 끝난 회차는 메뉴에서 숨김 (지금 보고 있는 회차는 항상 표시)
+      return ALL_ROUNDS.filter(r => String(r.round) === CURRENT_ROUND || !sentRounds.has(String(r.round)));
+    }
+
+    function updateTitle() {
+      const el = document.getElementById('roundTitle');
+      const multi = visibleRounds().length > 1;
+      el.innerHTML = `프로토 ${CURRENT_ROUND}회차` + (multi ? '<span class="round-caret">▾</span>' : '');
+      el.title = multi ? '회차 선택' : '총배팅금액 보기';
+    }
+
+    function onTitleClick(e) {
+      e && e.stopPropagation();
+      if (visibleRounds().length <= 1) { toggleTotalPanel(); return; }
+      roundMenuOpen = !roundMenuOpen;
+      renderRoundMenu();
+    }
+
+    function renderRoundMenu() {
+      const menu = document.getElementById('roundMenu');
+      if (!roundMenuOpen) { menu.style.display = 'none'; return; }
+      menu.innerHTML = visibleRounds().slice().reverse().map(r => {
+        const n = Object.keys(r.combos || {}).length;
+        const inv = Object.values(r.combos || {}).reduce((a, v) => a + (v.betAmount || 0), 0);
+        const man = Math.round(inv / 1000) / 10;
+        const cur = String(r.round) === CURRENT_ROUND;
+        return `<div class="round-menu-item${cur ? ' is-current' : ''}" onclick="selectRound('${r.round}')">
+          <span>${r.round}회차${cur ? ' ✓' : ''}</span><span class="rm-sub">${n}조합 · ${man.toLocaleString()}만</span></div>`;
+      }).join('');
+      menu.style.display = 'block';
+    }
+
+    function selectRound(r) {
+      roundMenuOpen = false;
+      if (String(r) === CURRENT_ROUND) { renderRoundMenu(); return; }
+      localStorage.setItem(SEL_KEY, String(r));
+      location.reload();
+    }
+
+    document.addEventListener('click', e => {
+      if (roundMenuOpen && !e.target.closest('#roundMenu') && !e.target.closest('#roundTitle')) {
+        roundMenuOpen = false; renderRoundMenu();
+      }
+    });
+
+    async function loadSentRounds() {
+      if (!supabaseClient || ALL_ROUNDS.length <= 1) return;
+      try {
+        const { data } = await supabaseClient.from(TABLE_NAME).select('state').eq('round', HISTORY_ROUND).maybeSingle();
+        const rows = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows : [];
+        rows.forEach(x => { if (x && x.round != null) sentRounds.add(String(x.round).split('-')[0]); });
+        updateTitle();
+        if (roundMenuOpen) renderRoundMenu();
+      } catch (err) { console.error('전송 회차 확인 실패:', err); }
+    }
+
     function startApp() {
-      const D = window.ROUND_DATA;
+      const D = pickRound();
       if (!D || !D.round || !D.combos || !D.matches) {
         document.getElementById('matchList').innerHTML =
-          '<div style="color:#fb7185;padding:20px;text-align:center;">round.js 형식 오류 — ROUND_DATA를 확인해줘</div>';
+          '<div style="color:#fb7185;padding:20px;text-align:center;">round.js 형식 오류 — ROUNDS를 확인해줘</div>';
         return;
       }
       CURRENT_ROUND = String(D.round);
@@ -1190,7 +1278,7 @@
       collapsed = JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}');
 
       document.title = `프로토 ${CURRENT_ROUND}회차`;
-      document.getElementById('roundTitle').textContent = `프로토 ${CURRENT_ROUND}회차`;
+      updateTitle();
       const totalInvest = Object.values(comboInfo).reduce((a, v) => a + (v.betAmount || 0), 0);
       const man = Math.round(totalInvest / 1000) / 10;
       document.getElementById('totalChipAmt').textContent = `총 ${man.toLocaleString()}만`;
@@ -1199,6 +1287,7 @@
       takeSnapshot();
       render();
       initSupabaseSync();
+      loadSentRounds();
     }
 
     // 캐시 방지: 매번 최신 round.js를 불러옴
