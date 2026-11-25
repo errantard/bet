@@ -47,19 +47,25 @@ window.ROUNDS = [
       1: { odd: 27.5, betAmount: 15000 },
       2: { odd: 23.0, betAmount: 15000 },
       3: { odd: 67.4, betAmount: 10000 },
-      4: { odd: 115.4, betAmount: 10000 }
+      4: { odd: 115.4, betAmount: 10000 },
+      5: { odd: 33.8, betAmount: 10000 },
+      6: { odd: 27.1, betAmount: 10000 },
+      7: { odd: 40.9, betAmount: 10000 }
     },
 
+    // ※ 회차 중간 추가분은 기존 id(m1~m11) 유지 + 새 경기 m12~ (이미 입력한 결과 보존용)
     matches: [
-      { id: "m1", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "draw", odd: "2.90", combs: [4] },
-      { id: "m2", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "제프 유나이티드", away: "나고야 그램퍼스", pickTarget: "home", odd: "2.85", combs: [3, 4] },
-      { id: "m3", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "home", odd: "1.86", combs: [2, 4] },
+      { id: "m1", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "draw", odd: "2.90", combs: [4, 5] },
+      { id: "m12", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "home", odd: "2.65", combs: [7] },
+      { id: "m13", time: "11.25 19:00", league: "일본 J1리그", type: "U/O 2.5", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "away", odd: "2.33", combs: [6] },
+      { id: "m2", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "제프 유나이티드", away: "나고야 그램퍼스", pickTarget: "home", odd: "2.85", combs: [3, 4, 5, 6] },
+      { id: "m3", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "home", odd: "1.86", combs: [2, 4, 7] },
       { id: "m4", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "draw", odd: "3.15", combs: [3] },
       { id: "m5", time: "11.25 19:00", league: "일본 J1리그", type: "H+1.0", home: "V바렌 나가사키", away: "가와사키 프론탈레", pickTarget: "draw", odd: "3.60", combs: [1] },
       { id: "m6", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "V바렌 나가사키", away: "가와사키 프론탈레", pickTarget: "away", odd: "1.78", combs: [2] },
-      { id: "m7", time: "11.25 19:00", league: "일본 J2리그", type: "승무패", home: "콘사도레 삿포로", away: "후지에다 MYFC", pickTarget: "home", odd: "1.83", combs: [1, 2, 3, 4] },
-      { id: "m8", time: "11.26 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "번리", away: "버밍엄 시티", pickTarget: "away", odd: "2.23", combs: [1] },
-      { id: "m9", time: "11.26 05:00", league: "잉글랜드 챔피언십", type: "승무패", home: "스토크 시티", away: "밀월", pickTarget: "home", odd: "2.03", combs: [2] },
+      { id: "m7", time: "11.25 19:00", league: "일본 J2리그", type: "승무패", home: "콘사도레 삿포로", away: "후지에다 MYFC", pickTarget: "home", odd: "1.83", combs: [1, 2, 3, 4, 5, 6, 7] },
+      { id: "m8", time: "11.26 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "번리", away: "버밍엄 시티", pickTarget: "away", odd: "2.23", combs: [1, 5, 6, 7] },
+      { id: "m9", time: "11.26 05:00", league: "잉글랜드 챔피언십", type: "승무패", home: "스토크 시티", away: "밀월", pickTarget: "home", odd: "2.03", combs: [2, 7] },
       { id: "m10", time: "11.26 05:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "스토크 시티", away: "밀월", pickTarget: "home", odd: "4.10", combs: [3, 4] },
       { id: "m11", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "1.87", combs: [1, 2] }
     ]
