@@ -879,7 +879,9 @@
     }
 
     function pickOutcome(id, outcome) {
-      state[id] = { outcome };  // 직접 누르면 스코어 기록은 지움
+      // 이미 선택된 결과를 한 번 더 누르면 취소(대기로 되돌림). 직접 누르면 스코어 기록은 지움
+      if (state[id]?.outcome === outcome) delete state[id];
+      else state[id] = { outcome };
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
       render();
       pushStateToCloud();
@@ -901,7 +903,7 @@
     }
 
     function resetAll() {
-      if (confirm('모든 경기 결과를 대기 상태로 초기화할까?')) {
+      if (confirm(`${CURRENT_ROUND}회차 경기 결과를 전부 초기화할까?\n(다른 회차는 안 지워져)`)) {
         state = {};
         localStorage.removeItem(STATE_KEY);
         render();
@@ -929,8 +931,23 @@
           pending++;
         }
       });
+      // 통계용 경기별 기록 (stats.html)
+      const picks = matches.map(m => {
+        const st = state[m.id] || {};
+        return { id: m.id, time: m.time, league: m.league, type: m.type, home: m.home, away: m.away,
+          pick: m.pickTarget, odd: Number(m.odd), combs: m.combs.length,
+          outcome: st.outcome || null, score: st.score || null,
+          hit: st.outcome ? st.outcome === m.pickTarget : null };
+      });
+      const combos = Object.keys(comboInfo).map(k => {
+        const c = Number(k), cm = matches.filter(m => m.combs.includes(c));
+        return { no: c, legs: cm.length, odd: comboInfo[c].odd, bet: comboInfo[c].betAmount || 0,
+          hit: cm.length > 0 && cm.every(m => state[m.id]?.outcome === m.pickTarget) };
+      });
       return {
         round: CURRENT_ROUND,
+        picks,
+        combos,
         invest,
         payout,
         profit: payout - invest,

@@ -1,0 +1,276 @@
+<!--
+[고정 파일 — 매 회차 수정 금지]
+배팅 통계 페이지: Supabase bet 테이블 round="__history__" 행의 state.rows[].picks(경기별 기록)를 묶어서 보여줌.
+picks는 트래커 [전송] 때 자동 저장됨.
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>프로토 통계</title>
+  <meta name="theme-color" content="#0b0f19">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #070a12; color: #c9d1d9; }
+    body { display: flex; justify-content: center; }
+    .app { width: 100%; max-width: 760px; height: 100%; background: #0b0f19; display: flex; flex-direction: column; border-left: 1px solid #162032; border-right: 1px solid #162032; }
+    .top { flex-shrink: 0; padding: 14px 14px 10px; border-bottom: 2px solid #1e293f; box-shadow: 0 4px 12px rgba(0,0,0,0.45); }
+    .header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .title { font-size: 1.05rem; font-weight: bold; color: #fff; white-space: nowrap; }
+    .btns { display: flex; gap: 6px; }
+    .btn { height: 34px; padding: 0 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; display: inline-flex; align-items: center; background: #1a2438; border: 1px solid #2b3a58; color: #79c0ff; text-decoration: none; }
+    .chips { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
+    .chip { flex-shrink: 0; border: 1px solid #1f3352; background: #0c121e; color: #64748b; font-size: 0.74rem; font-weight: bold; padding: 6px 11px; border-radius: 999px; cursor: pointer; }
+    .chip.on { background: #13294a; border-color: #38bdf8; color: #38bdf8; }
+    .sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .card { background: #131b2e; border: 1px solid #23314f; border-radius: 8px; padding: 7px 8px; }
+    .card-t { font-size: 0.68rem; color: #8b949e; margin-bottom: 3px; white-space: nowrap; }
+    .card-v { font-size: 0.95rem; font-weight: bold; color: #fff; white-space: nowrap; }
+    .body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px 60px; }
+    .note { font-size: 0.72rem; color: #7d8590; background: #0f1626; border: 1px dashed #26354f; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.55; }
+    .sec { background: #131a2a; border: 1px solid #1e293f; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+    .sec-t { font-size: 0.88rem; font-weight: bold; color: #f1f5f9; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+    .sec-t span { font-size: 0.66rem; color: #64748b; font-weight: normal; }
+    .tr { display: grid; grid-template-columns: 2fr 0.6fr 1.3fr 0.7fr 0.75fr; gap: 6px; align-items: center; font-size: 0.78rem; padding: 6px 0; border-bottom: 1px solid #1a253c; color: #cbd5e1; }
+    .tr:last-child { border-bottom: none; }
+    .tr.head { font-size: 0.64rem; color: #64748b; padding-top: 0; }
+    .tr > span:not(:first-child) { text-align: right; }
+    .tr .nm { font-size: 0.74rem; font-weight: bold; color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tr.low { opacity: 0.42; }
+    .rate { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+    .bar { flex: 1; height: 6px; background: #0c121e; border-radius: 3px; overflow: hidden; max-width: 70px; }
+    .bar i { display: block; height: 100%; background: linear-gradient(90deg, #0ea5e9, #38bdf8); border-radius: 3px; }
+    .roi.pos { color: #34d399; font-weight: bold; } .roi.neg { color: #fb7185; }
+    .tr.click { cursor: pointer; }
+    .tr.click .nm::before { content: '▸ '; color: #475569; }
+    .tr.click.open .nm::before { content: '▾ '; color: #38bdf8; }
+    .tr.open { border-bottom: none; }
+    .drill { background: #0c121e; border: 1px solid #1a253c; border-radius: 8px; padding: 8px 10px; margin: 2px 0 8px; }
+    .drill-t { font-size: 0.68rem; color: #7d8590; margin: 4px 0 4px; }
+    .drill .tr { font-size: 0.72rem; padding: 4px 0; }
+    .drill .tr .nm { font-weight: normal; color: #cbd5e1; }
+    .odds { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .od { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+    .od.h { background: #064e3b; color: #34d399; }
+    .od.m { background: #2a1720; color: #fb7185; opacity: 0.75; }
+    .empty { text-align: center; color: #64748b; font-size: 0.85rem; padding: 40px 10px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="header">
+        <div class="title">📈 배팅 통계</div>
+        <div class="btns">
+          <a class="btn" href="history.html">실적</a>
+          <a class="btn" href="./">트래커</a>
+        </div>
+      </div>
+      <div class="chips" id="periodChips">
+        <button class="chip on" data-p="all" onclick="setPeriod('all')">전체</button>
+        <button class="chip" data-p="28" onclick="setPeriod('28')">최근 4주</button>
+        <button class="chip" data-p="56" onclick="setPeriod('56')">최근 8주</button>
+      </div>
+      <div class="sum">
+        <div class="card"><div class="card-t">기록된 픽</div><div class="card-v" id="sN">-</div></div>
+        <div class="card"><div class="card-t">픽 적중률</div><div class="card-v" id="sRate">-</div></div>
+        <div class="card"><div class="card-t">단폴 회수율</div><div class="card-v" id="sRoi">-</div></div>
+        <div class="card"><div class="card-t">조합 적중</div><div class="card-v" id="sCombo">-</div></div>
+      </div>
+    </div>
+    <div class="body" id="body"><div class="empty">불러오는 중…</div></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://ioqxulvuasjsabcvikug.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ZDDxH_TUePOMfhVZCGY1pw_1mgtfK9G";
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+    const MIN_N = 10;   // 이보다 적은 표본은 흐리게
+    let ROWS = [], period = 'all';
+
+    // 리그 이름 정리 (같은 리그를 하나로 묶음)
+    function normLeague(l) {
+      const s = String(l || '').replace(/\s+/g, '');
+      if (/친선/.test(s)) return '친선경기';
+      if (/EPL|프리미어리그/i.test(s) && !/스코|러시아/.test(s)) return 'EPL';
+      if (/챔피언십/.test(s)) return '챔피언십';
+      if (/AFC|챔스엘리트|ACL/i.test(s)) return 'AFC 챔스';
+      if (/챔피언스리그|UCL/i.test(s)) return 'UCL';
+      if (/유로파/.test(s)) return 'UEL';
+      if (/컨퍼런스/.test(s)) return 'UECL';
+      if (/J리그컵|르방/.test(s)) return 'J리그컵';
+      if (/J1/i.test(s)) return 'J1';
+      if (/J2/i.test(s)) return 'J2';
+      if (/J3/i.test(s)) return 'J3';
+      if (/K리그1/i.test(s)) return 'K리그1';
+      if (/K리그2/i.test(s)) return 'K리그2';
+      if (/분데스/.test(s)) return '분데스리가';
+      if (/라리가/.test(s)) return '라리가';
+      if (/세리에/.test(s)) return '세리에A';
+      if (/리그1|리그앙/.test(s)) return '리그1';
+      return String(l || '기타').trim();
+    }
+    function normType(t) {
+      t = String(t || '');
+      if (/U\/O/.test(t)) return '언더오버';
+      const h = t.match(/H\s*([+-][\d.]+)/);
+      if (h) return 'H' + (parseFloat(h[1]) > 0 ? '+' : '') + parseFloat(h[1]);
+      return '승무패';
+    }
+    function pickName(p) {
+      const t = normType(p.type);
+      if (t === '언더오버') return p.pick === 'away' ? '오버' : '언더';
+      if (t === 'H-1') return { home: '홈 2점차↑', draw: '홈 1점차승', away: '원정 승·무' }[p.pick];
+      if (t === 'H+1') return { home: '홈 승·무', draw: '원정 1점차승', away: '원정 2점차↑' }[p.pick];
+      return { home: '홈승', draw: '무승부', away: '원정승' }[p.pick] || p.pick;
+    }
+    function oddBand(o) {
+      if (o < 1.6) return '1.6 미만';
+      if (o < 2.0) return '1.6~2.0';
+      if (o < 3.0) return '2.0~3.0';
+      return '3.0 이상';
+    }
+
+    const FINE = ['1.6 미만', '1.6~1.8', '1.8~2.0', '2.0~2.5', '2.5~3.0', '3.0~4.0', '4.0 이상'];
+    function fineBand(o) {
+      if (o < 1.6) return FINE[0]; if (o < 1.8) return FINE[1]; if (o < 2.0) return FINE[2];
+      if (o < 2.5) return FINE[3]; if (o < 3.0) return FINE[4]; if (o < 4.0) return FINE[5]; return FINE[6];
+    }
+    let openKey = null;
+    function toggleDrill(key) { openKey = openKey === key ? null : key; render(); }
+
+    // 같은 회차를 여러 번 전송했으면(139-2 등) 마지막 것만 사용
+    function latestRows(rows) {
+      const m = new Map();
+      rows.forEach(r => { const b = String(r.round).split('-')[0]; m.set(b, r); });
+      return [...m.values()];
+    }
+
+    function setPeriod(p) {
+      period = p;
+      document.querySelectorAll('#periodChips .chip').forEach(c => c.classList.toggle('on', c.dataset.p === p));
+      render();
+    }
+
+    function group(picks, keyFn, order) {
+      const g = new Map();
+      picks.forEach(p => {
+        const k = keyFn(p);
+        if (!g.has(k)) g.set(k, { k, n: 0, hit: 0, ret: 0, oddSum: 0, items: [] });
+        const x = g.get(k);
+        x.n++; x.oddSum += p.odd; x.items.push(p);
+        if (p.hit) { x.hit++; x.ret += p.odd; }
+      });
+      let arr = [...g.values()];
+      if (order) arr.sort((a, b) => order.indexOf(a.k) - order.indexOf(b.k));
+      else arr.sort((a, b) => b.n - a.n);
+      return arr;
+    }
+
+    function rowHtml(x, extra) {
+      const rate = x.n ? x.hit / x.n * 100 : 0;
+      const roi = x.n ? x.ret / x.n * 100 : 0;
+      return `<div class="tr${x.n < MIN_N ? ' low' : ''}${extra || ''}">
+        <span class="nm">${x.k}</span><span>${x.hit}/${x.n}</span>
+        <span class="rate"><span class="bar"><i style="width:${rate.toFixed(0)}%"></i></span>${rate.toFixed(0)}%</span>
+        <span>${(x.oddSum / x.n).toFixed(2)}</span>
+        <span class="roi ${roi >= 100 ? 'pos' : 'neg'}">${roi.toFixed(0)}%</span></div>`;
+    }
+    // 펼침: 그 항목 안에서 배당 구간별 + 실제 배당 목록(적중 초록 / 실패 빨강)
+    function drillHtml(x) {
+      const sub = group(x.items, p => fineBand(p.odd), FINE);
+      const list = [...x.items].sort((a, b) => a.odd - b.odd)
+        .map(p => `<span class="od ${p.hit ? 'h' : 'm'}" title="${p.round}회 ${p.home || ''} vs ${p.away || ''}">${p.odd.toFixed(2)}</span>`).join('');
+      return `<div class="drill"><div class="drill-t">배당 구간별</div>${sub.map(y => rowHtml(y)).join('')}
+        <div class="drill-t" style="margin-top:8px;">실제 배당 (초록 = 적중, 빨강 = 실패)</div><div class="odds">${list}</div></div>`;
+    }
+    function table(title, sub, arr, id) {
+      if (!arr.length) return '';
+      if (id) return `<div class="sec"><div class="sec-t">${title}<span>${sub ? sub + ' · ' : ''}눌러서 배당별 보기</span></div>
+        <div class="tr head"><span>구분</span><span>적중</span><span>적중률</span><span>평균배당</span><span>회수율</span></div>` +
+        arr.map(x => { const key = id + '|' + x.k, op = openKey === key;
+          return `<div onclick="toggleDrill('${key.replace(/'/g, "\\'")}')">${rowHtml(x, ' click' + (op ? ' open' : ''))}</div>${op ? drillHtml(x) : ''}`; }).join('') + '</div>';
+      const rowsHtml = arr.map(x => {
+        const rate = x.n ? x.hit / x.n * 100 : 0;
+        const roi = x.n ? x.ret / x.n * 100 : 0;
+        return `<div class="tr${x.n < MIN_N ? ' low' : ''}">
+          <span class="nm">${x.k}</span><span>${x.hit}/${x.n}</span>
+          <span class="rate"><span class="bar"><i style="width:${rate.toFixed(0)}%"></i></span>${rate.toFixed(0)}%</span>
+          <span>${(x.oddSum / x.n).toFixed(2)}</span>
+          <span class="roi ${roi >= 100 ? 'pos' : 'neg'}">${roi.toFixed(0)}%</span></div>`;
+      }).join('');
+      return `<div class="sec"><div class="sec-t">${title}<span>${sub || ''}</span></div>
+        <div class="tr head"><span>구분</span><span>적중</span><span>적중률</span><span>평균배당</span><span>회수율</span></div>${rowsHtml}</div>`;
+    }
+
+    function render() {
+      const body = document.getElementById('body');
+      let rows = latestRows(ROWS);
+      if (period !== 'all') {
+        const since = Date.now() - Number(period) * 86400000;
+        rows = rows.filter(r => r.sentAt && new Date(r.sentAt).getTime() >= since);
+      }
+      const withPicks = rows.filter(r => Array.isArray(r.picks) && r.picks.length);
+      const noPicks = rows.length - withPicks.length;
+      const all = [];
+      withPicks.forEach(r => r.picks.forEach(p => all.push({ ...p, round: String(r.round).split('-')[0], odd: Number(p.odd) || 0 })));
+      const done = all.filter(p => p.outcome);
+      const unentered = all.length - done.length;
+
+      const hit = done.filter(p => p.hit).length;
+      const ret = done.reduce((s, p) => s + (p.hit ? p.odd : 0), 0);
+      const combos = withPicks.flatMap(r => r.combos || []);
+      const cHit = combos.filter(c => c.hit).length;
+      document.getElementById('sN').textContent = done.length ? `${done.length}개` : '-';
+      document.getElementById('sRate').textContent = done.length ? `${(hit / done.length * 100).toFixed(0)}%` : '-';
+      const roiAll = done.length ? ret / done.length * 100 : 0;
+      const roiEl = document.getElementById('sRoi');
+      roiEl.textContent = done.length ? `${roiAll.toFixed(0)}%` : '-';
+      roiEl.style.color = !done.length ? '' : (roiAll >= 100 ? '#34d399' : '#fb7185');
+      document.getElementById('sCombo').textContent = combos.length ? `${cHit}/${combos.length}` : '-';
+
+      const notes = [];
+      notes.push(`회차 ${withPicks.length}개 기준 · 표본 ${MIN_N}개 미만은 흐리게 표시 (운일 수 있음)`);
+      if (unentered) notes.push(`결과 미입력 픽 ${unentered}개는 통계에서 뺐어`);
+      if (noPicks) notes.push(`경기 기록이 없는 예전 회차 ${noPicks}개는 빠져 있어 (과거 데이터 복구는 다음 단계)`);
+      notes.push('회수율 = 그 픽만 단폴로 샀다고 쳤을 때 돌아오는 돈 (100% 넘으면 이득)');
+
+      if (!done.length) {
+        body.innerHTML = `<div class="note">${notes.join('<br>')}</div><div class="empty">아직 통계 낼 기록이 없어<br>이제부터 트래커에서 <b>전송</b>하는 회차가 쌓여</div>`;
+        return;
+      }
+
+      const legsOf = c => c.legs >= 6 ? '6폴 이상' : `${c.legs}폴`;
+      const comboGroups = (() => {
+        const g = new Map();
+        combos.forEach(c => { const k = legsOf(c); if (!g.has(k)) g.set(k, { k, n: 0, hit: 0, ret: 0, oddSum: 0 });
+          const x = g.get(k); x.n++; x.oddSum += c.odd; if (c.hit) { x.hit++; x.ret += c.odd; } });
+        return [...g.values()].sort((a, b) => parseInt(a.k) - parseInt(b.k));
+      })();
+
+      body.innerHTML = `<div class="note">${notes.join('<br>')}</div>` +
+        table('리그별', '', group(done, p => normLeague(p.league)), 'lg') +
+        table('게임 유형별', '', group(done, p => normType(p.type), ['승무패', 'H-1', 'H+1', '언더오버']), 'tp') +
+        table('배당 구간별', '', group(done, p => oddBand(p.odd), ['1.6 미만', '1.6~2.0', '2.0~3.0', '3.0 이상'])) +
+        table('픽 종류별', '유형 · 내 픽', group(done, p => `${normType(p.type)} · ${pickName(p)}`), 'pk') +
+        table('조합 폴더 수별', '조합 단위 · 회수율 = 조합 배당 기준', comboGroups);
+    }
+
+    async function load() {
+      if (window.__STATS_TEST_ROWS) { ROWS = window.__STATS_TEST_ROWS; render(); return; }
+      if (!sb) { document.getElementById('body').innerHTML = '<div class="empty">클라우드 연결이 안 돼서 못 불러왔어</div>'; return; }
+      try {
+        const { data, error } = await sb.from('bet').select('state').eq('round', '__history__').maybeSingle();
+        if (error) throw error;
+        ROWS = (data && data.state && Array.isArray(data.state.rows)) ? data.state.rows : [];
+        render();
+      } catch (e) {
+        document.getElementById('body').innerHTML = `<div class="empty">불러오기 실패 😢<br>${e.message || e}</div>`;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
