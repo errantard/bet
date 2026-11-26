@@ -421,6 +421,8 @@
     .match-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .match-meta { font-size: 0.78rem; color: #7d8590; display: flex; align-items: center; gap: 6px; }
     .badge-type { background: #1c263c; color: #58a6ff; padding: 1px 5px; border-radius: 4px; font-weight: bold; font-size: 0.68rem; }
+    .badge-type .badge-pick { color: #fbbf24; white-space: nowrap; }
+    .match-meta { flex-wrap: wrap; row-gap: 3px; }
 
     .combs-badge-wrap { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .c-badge { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: bold; color: #fff; }
@@ -808,7 +810,7 @@
           <div class="match-header-row">
             <div class="match-meta">
               <span>${m.time} · ${m.league}</span>
-              <span class="badge-type">${m.type}</span>
+              <span class="badge-type">${m.type}${/H\s*[+-]/.test(m.type) ? `<span class="badge-pick"> · ${pickLabel(m)}</span>` : ''}</span>
             </div>
             <div class="combs-badge-wrap">${combsHtml}</div>
           </div>
