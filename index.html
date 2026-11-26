@@ -548,6 +548,27 @@
     .round-menu-item.is-current { background: #16233a; color: #38bdf8; }
     .round-menu-item .rm-sub { font-size: 0.72rem; color: #94a3b8; font-weight: normal; }
     .round-menu-item.is-current .rm-sub { color: #7dd3fc; }
+    /* 스코어 입력 시트 */
+    .score-sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .score-sheet-bg.open { display: flex; }
+    .score-sheet { width: 100%; max-width: 760px; background: #111a2b; border-top: 1px solid #26354f; border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); animation: sheetUp 0.2s ease-out; }
+    @keyframes sheetUp { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .ss-title { text-align: center; font-weight: bold; color: #f1f5f9; font-size: 0.98rem; margin-bottom: 4px; }
+    .ss-sub { text-align: center; font-size: 0.72rem; color: #7d8590; margin-bottom: 12px; }
+    .ss-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .ss-lbl { width: 34px; font-size: 0.78rem; color: #94a3b8; font-weight: bold; flex-shrink: 0; }
+    .ss-nums { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 1; }
+    .ss-num { height: 40px; border-radius: 8px; border: 1px solid #23314f; background: #0c121e; color: #cbd5e1; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
+    .ss-num.on { background: #1d4ed8; border-color: #60a5fa; color: #fff; }
+    .ss-preview { font-size: 0.74rem; color: #94a3b8; background: #0b1220; border: 1px solid #1a253c; border-radius: 8px; padding: 8px 10px; margin: 4px 0 12px; line-height: 1.6; min-height: 20px; }
+    .ss-preview .ok { color: #34d399; font-weight: bold; } .ss-preview .ng { color: #fb7185; font-weight: bold; }
+    .ss-btns { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 8px; }
+    .ss-btn { height: 42px; border-radius: 8px; font-weight: bold; font-size: 0.86rem; cursor: pointer; border: 1px solid #2b3a58; background: #1a2438; color: #94a3b8; }
+    .ss-btn.reset { color: #ff7b72; border-color: #4e2429; background: #26161a; }
+    .ss-btn.ok { color: #fff; background: #10291f; border-color: #1f6e4a; color: #34d399; }
+    .ss-btn:disabled { opacity: 0.4; }
+    .btn-reset-match.has-score { color: #fbbf24; border-color: #5b4a1a; background: #1d1a10; font-size: 0.9rem; }
+    .tag-unentered { font-size: 0.66rem; color: #fbbf24; border: 1px dashed #5b4a1a; padding: 0 5px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -596,6 +617,21 @@
         <div class="drawer-match-list" id="drawerMatchList"></div>
       </div>
 
+    </div>
+
+    <div class="score-sheet-bg" id="scoreSheetBg" onclick="if(event.target===this) closeScoreSheet()">
+      <div class="score-sheet">
+        <div class="ss-title" id="ssTitle"></div>
+        <div class="ss-sub" id="ssSub"></div>
+        <div class="ss-row"><span class="ss-lbl">홈</span><div class="ss-nums" id="ssHome"></div></div>
+        <div class="ss-row"><span class="ss-lbl">원정</span><div class="ss-nums" id="ssAway"></div></div>
+        <div class="ss-preview" id="ssPreview"></div>
+        <div class="ss-btns">
+          <button class="ss-btn reset" onclick="resetScoreGroup()">초기화</button>
+          <button class="ss-btn" onclick="closeScoreSheet()">취소</button>
+          <button class="ss-btn ok" id="ssOk" onclick="confirmScore()">확인</button>
+        </div>
+      </div>
     </div>
 
     <div class="scrollable-body">
@@ -719,9 +755,11 @@
         if (data && data.state && Object.keys(data.state).length > 0) {
           state = data.state;
           localStorage.setItem(STATE_KEY, JSON.stringify(state));
-          takeSnapshot();
-          render();
         }
+        const filled = applyRoundScores();
+        takeSnapshot();
+        render();
+        if (filled) pushStateToCloud();
       } catch (err) {
         console.error('초기 데이터 로딩 오류:', err);
       }
@@ -758,8 +796,9 @@
       const comboStatus = getComboStatusMap();
 
       matches.forEach(m => {
-        if (hideDead && m.combs.every(c => hiddenCombos.has(c) && comboStatus[c] === false)) return;
         const curOutcome = state[m.id]?.outcome || null;
+        // 부러진 경기라도 결과 미입력이면 숨기지 않음 (결과 입력·통계용)
+        if (hideDead && curOutcome && m.combs.every(c => hiddenCombos.has(c) && comboStatus[c] === false)) return;
         const isHit = curOutcome && curOutcome === m.pickTarget;
         const isFail = curOutcome && curOutcome !== m.pickTarget;
         const isCollapsed = !!collapsed[m.id];
@@ -810,6 +849,7 @@
           <div class="match-header-row">
             <div class="match-meta">
               <span>${m.time} · ${m.league}</span>
+              ${!curOutcome && allAssociatedCombosDead ? '<span class="tag-unentered">결과 미입력</span>' : ''}
               <span class="badge-type">${m.type}${/H\s*[+-]/.test(m.type) ? `<span class="badge-pick"> · ${pickLabel(m)}</span>` : ''}</span>
             </div>
             <div class="combs-badge-wrap">${combsHtml}</div>
@@ -824,8 +864,8 @@
           </div>
           <div class="bet-bottom-row">
             <div class="slots-container">${slotsHtml}</div>
-            <button class="btn-reset-match ${!curOutcome ? 'is-waiting' : ''}" onclick="clearOutcome('${m.id}')">
-              대기
+            <button class="btn-reset-match ${state[m.id]?.score ? 'has-score' : (!curOutcome ? 'is-waiting' : '')}" onclick="openScoreSheet('${m.id}')">
+              ${state[m.id]?.score || '스코어'}
             </button>
           </div>
         `;
@@ -839,8 +879,7 @@
     }
 
     function pickOutcome(id, outcome) {
-      if (!state[id]) state[id] = {};
-      state[id].outcome = outcome;
+      state[id] = { outcome };  // 직접 누르면 스코어 기록은 지움
       localStorage.setItem(STATE_KEY, JSON.stringify(state));
       render();
       pushStateToCloud();
@@ -1164,6 +1203,67 @@
       });
     }
 
+    // ===== 스코어 입력 → 같은 경기(홈·원정·시간 같음) 카드 전부 자동 판정 =====
+    let ssGroup = [], ssH = null, ssA = null;
+    const matchKey = m => `${m.time}|${m.home}|${m.away}`;
+    function outcomeFromScore(m, h, a) {
+      const t = m.type || '';
+      const uo = t.match(/U\/O\s*([\d.]+)/);
+      if (uo) return (h + a) < parseFloat(uo[1]) ? 'home' : 'away';
+      const hc = t.match(/H\s*([+-][\d.]+)/);
+      const d = h - a + (hc ? parseFloat(hc[1]) : 0);
+      return d > 0 ? 'home' : (d === 0 ? 'draw' : 'away');
+    }
+    function openScoreSheet(id) {
+      const m = matches.find(x => x.id === id);
+      ssGroup = matches.filter(x => matchKey(x) === matchKey(m));
+      const sc = state[id]?.score;
+      [ssH, ssA] = sc ? sc.split('-').map(Number) : [null, null];
+      document.getElementById('ssTitle').textContent = `${m.home} vs ${m.away}`;
+      document.getElementById('ssSub').textContent = `같은 경기 ${ssGroup.length}개 카드 한 번에 입력 · ${m.time}`;
+      renderScoreSheet();
+      document.getElementById('scoreSheetBg').classList.add('open');
+    }
+    function closeScoreSheet() { document.getElementById('scoreSheetBg').classList.remove('open'); }
+    function setSS(side, n) { if (side === 'h') ssH = n; else ssA = n; renderScoreSheet(); }
+    function renderScoreSheet() {
+      const nums = (side, cur) => [0,1,2,3,4,5,6].map(n => `<button class="ss-num${cur === n ? ' on' : ''}" onclick="setSS('${side}',${n})">${n}</button>`).join('');
+      document.getElementById('ssHome').innerHTML = nums('h', ssH);
+      document.getElementById('ssAway').innerHTML = nums('a', ssA);
+      const ready = ssH !== null && ssA !== null;
+      document.getElementById('ssOk').disabled = !ready;
+      document.getElementById('ssPreview').innerHTML = !ready ? '홈·원정 골 수를 눌러줘' :
+        ssGroup.map(x => { const ok = outcomeFromScore(x, ssH, ssA) === x.pickTarget;
+          return `${x.type} [${pickLabel(x)}] → <span class="${ok ? 'ok' : 'ng'}">${ok ? '적중' : '실패'}</span>`; }).join('<br>');
+    }
+    function confirmScore() {
+      if (ssH === null || ssA === null) return;
+      ssGroup.forEach(x => { state[x.id] = { outcome: outcomeFromScore(x, ssH, ssA), score: `${ssH}-${ssA}` }; });
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      closeScoreSheet(); render(); pushStateToCloud();
+    }
+    // round.js 경기에 score: "2-1" 이 적혀 있으면, 결과가 비어 있는 같은 경기 카드에 자동 적용
+    function applyRoundScores() {
+      const byKey = {};
+      matches.forEach(x => { if (x.score && /^\d+-\d+$/.test(x.score)) byKey[matchKey(x)] = x.score; });
+      let changed = false;
+      matches.forEach(x => {
+        const sc = byKey[matchKey(x)];
+        if (!sc || state[x.id]?.outcome) return;
+        const [h, a] = sc.split('-').map(Number);
+        state[x.id] = { outcome: outcomeFromScore(x, h, a), score: sc };
+        changed = true;
+      });
+      if (changed) localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      return changed;
+    }
+
+    function resetScoreGroup() {
+      ssGroup.forEach(x => { delete state[x.id]; });
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      closeScoreSheet(); render(); pushStateToCloud();
+    }
+
     function toggleFullscreen() {
       const fsBtn = document.getElementById('fsBtn');
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -1286,6 +1386,7 @@
       document.getElementById('totalChipAmt').textContent = `총 ${man.toLocaleString()}만`;
 
       buildCards();
+      applyRoundScores();
       takeSnapshot();
       render();
       initSupabaseSync();
