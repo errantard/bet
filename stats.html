@@ -122,12 +122,6 @@ picks는 트래커 [전송] 때 자동 저장됨.
       if (t === 'H+1') return { home: '홈 승·무', draw: '원정 1점차승', away: '원정 2점차↑' }[p.pick];
       return { home: '홈승', draw: '무승부', away: '원정승' }[p.pick] || p.pick;
     }
-    function oddBand(o) {
-      if (o < 1.6) return '1.6 미만';
-      if (o < 2.0) return '1.6~2.0';
-      if (o < 3.0) return '2.0~3.0';
-      return '3.0 이상';
-    }
 
     // 펼침용 세부 구간 (2.0 아래는 0.1 단위, 위로 갈수록 넓게)
     const FINE_EDGES = [1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.7, 3.0, 3.5, 4.0, 5.0];
@@ -251,7 +245,7 @@ picks는 트래커 [전송] 때 자동 저장됨.
       body.innerHTML = `<div class="note">${notes.join('<br>')}</div>` +
         table('리그별', '', group(done, p => normLeague(p.league)), 'lg') +
         table('게임 유형별', '', group(done, p => normType(p.type), ['승무패', 'H-1', 'H+1', '언더오버']), 'tp') +
-        table('배당 구간별', '', group(done, p => oddBand(p.odd), ['1.6 미만', '1.6~2.0', '2.0~3.0', '3.0 이상'])) +
+        table('배당 구간별', '2.0 아래 0.1 단위', group(done, p => fineBand(p.odd), FINE)) +
         table('픽 종류별', '유형 · 내 픽', group(done, p => `${normType(p.type)} · ${pickName(p)}`), 'pk') +
         table('조합 폴더 수별', '조합 단위 · 회수율 = 조합 배당 기준', comboGroups);
     }
