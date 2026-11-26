@@ -51,6 +51,34 @@ picks는 트래커 [전송] 때 자동 저장됨.
     .drill-t { font-size: 0.68rem; color: #7d8590; margin: 4px 0 4px; }
     .drill .tr { font-size: 0.72rem; padding: 4px 0; }
     .drill .tr .nm { font-weight: normal; color: #cbd5e1; }
+    /* 적중률 막대: 흰 눈금 = 본전 적중률, 초록 = 본전 이상 / 빨강 = 본전 미만 */
+    .bar { position: relative; overflow: visible; }
+    .bar i.up { background: linear-gradient(90deg, #059669, #34d399); }
+    .bar i.dn { background: linear-gradient(90deg, #be123c, #fb7185); }
+    .bar b { position: absolute; top: -3px; width: 2px; height: 12px; background: #f8fafc; border-radius: 1px; box-shadow: 0 0 4px rgba(255,255,255,0.6); }
+    /* 픽 체크기 */
+    .chk-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+    .chk-row select, .chk-row input { width: 100%; background: #0a101c; border: 1px solid #23314f; border-radius: 6px; color: #f1f5f9; font-size: 0.85rem; padding: 8px; font-weight: bold; }
+    .chk-out { margin-top: 6px; }
+    .chk-line { display: grid; grid-template-columns: 1.7fr 0.6fr 0.9fr 0.5fr; gap: 6px; align-items: center; font-size: 0.74rem; padding: 6px 0; border-bottom: 1px solid #1a253c; }
+    .chk-line:last-child { border-bottom: none; }
+    .chk-line > span:not(:first-child) { text-align: right; }
+    .chk-line .lv { color: #94a3b8; }
+    .chk-sum { font-size: 0.84rem; font-weight: bold; padding: 8px 10px; border-radius: 8px; margin-top: 8px; }
+    .chk-sum.good { background: #0f2a24; color: #34d399; } .chk-sum.bad { background: #2a1720; color: #fb7185; } .chk-sum.mid { background: #1c2333; color: #cbd5e1; }
+    .recent { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .recent .card-v { font-size: 0.9rem; }
+    /* 보는 법 */
+    .help-btn { width: 34px; padding: 0; justify-content: center; font-size: 0.95rem; }
+    .sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; z-index: 300; }
+    .sheet-bg.open { display: flex; }
+    .sheet { width: 100%; max-width: 760px; max-height: 82vh; overflow-y: auto; background: #111a2b; border-top: 1px solid #26354f; border-radius: 16px 16px 0 0; padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
+    .sheet h3 { font-size: 1rem; color: #fff; margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .sheet h3 button { background: none; border: none; color: #94a3b8; font-size: 1.1rem; }
+    .hp { background: #0c121e; border: 1px solid #1a253c; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .hp-t { font-size: 0.86rem; font-weight: bold; color: #38bdf8; margin-bottom: 4px; }
+    .hp p { font-size: 0.8rem; color: #cbd5e1; line-height: 1.55; }
+    .hp p b { color: #fff; }
     .empty { text-align: center; color: #64748b; font-size: 0.85rem; padding: 40px 10px; line-height: 1.7; }
   </style>
 </head>
@@ -60,6 +88,7 @@ picks는 트래커 [전송] 때 자동 저장됨.
       <div class="header">
         <div class="title">📈 배팅 통계</div>
         <div class="btns">
+          <button class="btn help-btn" onclick="openHelp()" title="통계 보는 법">❓</button>
           <a class="btn" href="history.html">실적</a>
           <a class="btn" href="./">트래커</a>
         </div>
@@ -77,6 +106,26 @@ picks는 트래커 [전송] 때 자동 저장됨.
       </div>
     </div>
     <div class="body" id="body"><div class="empty">불러오는 중…</div></div>
+  </div>
+
+  <div class="sheet-bg" id="helpBg" onclick="if(event.target===this) closeHelp()">
+    <div class="sheet">
+      <h3>❓ 통계 보는 법 <button onclick="closeHelp()">✕</button></h3>
+      <div class="hp"><div class="hp-t">1. 막대 하나만 보면 돼</div>
+        <p><b>흰 눈금 = 본전선.</b> 막대가 눈금을 넘어서 <b style="color:#34d399">초록</b>이면 그 구간은 이득, 못 넘어서 <b style="color:#fb7185">빨강</b>이면 손해야.</p></div>
+      <div class="hp"><div class="hp-t">2. 본전선이 뭐야?</div>
+        <p>배당 2.0이면 <b>50%</b>는 맞혀야 본전. 1.5면 <b>67%</b>, 3.0이면 <b>33%</b>. 적중률이 높아도 배당이 짜면 손해일 수 있어.</p></div>
+      <div class="hp"><div class="hp-t">3. 회수율</div>
+        <p>그 픽만 단폴로 샀다고 쳤을 때 돌아오는 돈. <b>100% 넘으면 이득</b>, 아래면 손해.</p></div>
+      <div class="hp"><div class="hp-t">4. 흐린 줄은 믿지 마</div>
+        <p>표본 <b>10개 미만</b>은 흐리게 나와. 운일 수 있으니 참고만.</p></div>
+      <div class="hp"><div class="hp-t">5. 🔍 픽 체크 (2차 검증)</div>
+        <p>찍고 싶은 픽의 <b>리그·유형·픽·배당</b>을 넣으면 비슷했던 내 과거 픽 성적이 나와. 좁은 조건부터 넓은 조건 순서. 맨 아래 <b>✅ / ⚠️ / ➖</b> 한 줄만 보면 돼.</p></div>
+      <div class="hp"><div class="hp-t">6. 최근 흐름</div>
+        <p>최근 20픽이 전체보다 잘 맞는지. 많이 떨어지면 <b>잠깐 쉬어가는 신호</b>.</p></div>
+      <div class="hp"><div class="hp-t">7. 표 줄 누르기</div>
+        <p>리그별·유형별·픽 종류별 줄을 누르면 그 안의 <b>세부 배당 구간</b>이 펼쳐져. 다시 누르면 접혀.</p></div>
+    </div>
   </div>
 
   <script>
@@ -162,12 +211,17 @@ picks는 트래커 [전송] 때 자동 저장됨.
       return arr;
     }
 
+    // 본전 적중률 = 픽 수 ÷ 배당 합 (이만큼 맞으면 회수율 100%)
+    const breakEven = x => x.oddSum ? x.n / x.oddSum * 100 : 0;
+    function barHtml(x) {
+      const rate = x.n ? x.hit / x.n * 100 : 0, be = breakEven(x);
+      return `<span class="rate"><span class="bar"><i class="${rate >= be ? 'up' : 'dn'}" style="width:${Math.min(100, rate).toFixed(0)}%"></i><b style="left:calc(${Math.min(100, be).toFixed(0)}% - 1px)"></b></span>${rate.toFixed(0)}%</span>`;
+    }
     function rowHtml(x, extra) {
-      const rate = x.n ? x.hit / x.n * 100 : 0;
       const roi = x.n ? x.ret / x.n * 100 : 0;
       return `<div class="tr${x.n < MIN_N ? ' low' : ''}${extra || ''}">
         <span class="nm">${x.k}</span><span>${x.hit}/${x.n}</span>
-        <span class="rate"><span class="bar"><i style="width:${rate.toFixed(0)}%"></i></span>${rate.toFixed(0)}%</span>
+        ${barHtml(x)}
         <span>${(x.oddSum / x.n).toFixed(2)}</span>
         <span class="roi ${roi >= 100 ? 'pos' : 'neg'}">${roi.toFixed(0)}%</span></div>`;
     }
@@ -184,17 +238,55 @@ picks는 트래커 [전송] 때 자동 저장됨.
         <div class="tr head"><span>구분</span><span>적중</span><span>적중률</span><span>평균배당</span><span>회수율</span></div>` +
         arr.map(x => { const key = id + '|' + x.k, op = openKey === key;
           return `<div onclick="toggleDrill('${key.replace(/'/g, "\\'")}')">${rowHtml(x, ' click' + (op ? ' open' : ''))}</div>${op ? drillHtml(x) : ''}`; }).join('') + '</div>';
-      const rowsHtml = arr.map(x => {
-        const rate = x.n ? x.hit / x.n * 100 : 0;
-        const roi = x.n ? x.ret / x.n * 100 : 0;
-        return `<div class="tr${x.n < MIN_N ? ' low' : ''}">
-          <span class="nm">${x.k}</span><span>${x.hit}/${x.n}</span>
-          <span class="rate"><span class="bar"><i style="width:${rate.toFixed(0)}%"></i></span>${rate.toFixed(0)}%</span>
-          <span>${(x.oddSum / x.n).toFixed(2)}</span>
-          <span class="roi ${roi >= 100 ? 'pos' : 'neg'}">${roi.toFixed(0)}%</span></div>`;
-      }).join('');
+      const rowsHtml = arr.map(x => rowHtml(x)).join('');
       return `<div class="sec"><div class="sec-t">${title}<span>${sub || ''}</span></div>
         <div class="tr head"><span>구분</span><span>적중</span><span>적중률</span><span>평균배당</span><span>회수율</span></div>${rowsHtml}</div>`;
+    }
+
+    function openHelp() { document.getElementById('helpBg').classList.add('open'); }
+    function closeHelp() { document.getElementById('helpBg').classList.remove('open'); }
+
+    // ===== 🔍 픽 체크 (2차 검증) =====
+    const PICKS = { '승무패': [['home','홈승'],['draw','무승부'],['away','원정승']],
+      'H-1': [['home','홈 2점차↑'],['draw','홈 1점차승'],['away','원정 승·무']],
+      'H+1': [['home','홈 승·무'],['draw','원정 1점차승'],['away','원정 2점차↑']],
+      '언더오버': [['home','언더'],['away','오버']] };
+    let chk = { lg: '', tp: '승무패', pk: 'home', odd: '' }, DONE = [];
+    function chkSet(k, v) { chk[k] = v; if (k === 'tp') chk.pk = PICKS[v][0][0]; renderChecker(); }
+    function stat(list) { const x = { n: list.length, hit: list.filter(p => p.hit).length, oddSum: list.reduce((s, p) => s + p.odd, 0) }; return x; }
+    function renderChecker() {
+      const el = document.getElementById('checker'); if (!el) return;
+      const leagues = [...new Set(DONE.map(p => normLeague(p.league)))].sort();
+      const o = parseFloat(chk.odd);
+      const band = o > 1 ? fineBand(o) : null;
+      const sameType = p => normType(p.type) === chk.tp && p.pick === chk.pk;
+      const tiers = [];
+      if (band && chk.lg) tiers.push(['리그+유형+픽+배당', DONE.filter(p => sameType(p) && normLeague(p.league) === chk.lg && fineBand(p.odd) === band)]);
+      if (band) tiers.push(['유형+픽+배당 (전체 리그)', DONE.filter(p => sameType(p) && fineBand(p.odd) === band)]);
+      if (chk.lg) tiers.push(['리그+유형+픽', DONE.filter(p => sameType(p) && normLeague(p.league) === chk.lg)]);
+      tiers.push(['유형+픽 (전체)', DONE.filter(sameType)]);
+      if (band) tiers.push([`배당 ${band} 전체`, DONE.filter(p => fineBand(p.odd) === band)]);
+      // 결론: 표본 10개 이상인 가장 좁은 조건 기준
+      const base = tiers.find(t => t[1].length >= MIN_N);
+      let sum = '<div class="chk-sum mid">➖ 비슷한 픽이 아직 10개 안 돼서 판단 보류</div>';
+      if (base) {
+        const x = stat(base[1]), rate = x.hit / x.n * 100, be = (o > 1 ? 100 / o : x.n / x.oddSum * 100), d = rate - be;
+        sum = d >= 5 ? `<div class="chk-sum good">✅ 괜찮은 패턴 · ${base[0]} 기준 적중 ${rate.toFixed(0)}% (본전 ${be.toFixed(0)}%)</div>`
+            : d <= -5 ? `<div class="chk-sum bad">⚠️ 약한 패턴 · ${base[0]} 기준 적중 ${rate.toFixed(0)}% (본전 ${be.toFixed(0)}%)</div>`
+            : `<div class="chk-sum mid">➖ 본전 근처 · ${base[0]} 기준 적중 ${rate.toFixed(0)}% (본전 ${be.toFixed(0)}%)</div>`;
+      }
+      el.innerHTML = `<div class="sec-t">🔍 픽 체크<span>찍기 전에 2차 검증</span></div>
+        <div class="chk-row">
+          <select onchange="chkSet('lg', this.value)"><option value="">리그 (전체)</option>${leagues.map(l => `<option${l === chk.lg ? ' selected' : ''}>${l}</option>`).join('')}</select>
+          <select onchange="chkSet('tp', this.value)">${Object.keys(PICKS).map(t => `<option${t === chk.tp ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        </div>
+        <div class="chk-row">
+          <select onchange="chkSet('pk', this.value)">${PICKS[chk.tp].map(([v, n]) => `<option value="${v}"${v === chk.pk ? ' selected' : ''}>${n}</option>`).join('')}</select>
+          <input type="number" inputmode="decimal" step="0.01" placeholder="배당 (예: 1.85)" value="${chk.odd}" onchange="chkSet('odd', this.value)">
+        </div>
+        <div class="chk-out">${tiers.map(([nm, l]) => { const x = stat(l);
+          return `<div class="chk-line${x.n < MIN_N ? ' low' : ''}" style="${x.n < MIN_N ? 'opacity:0.45' : ''}"><span class="lv">${nm}</span><span>${x.hit}/${x.n}</span>${x.n ? barHtml(x) : '<span>-</span>'}<span></span></div>`; }).join('')}</div>
+        ${sum}`;
     }
 
     function render() {
@@ -209,6 +301,7 @@ picks는 트래커 [전송] 때 자동 저장됨.
       const all = [];
       withPicks.forEach(r => r.picks.forEach(p => all.push({ ...p, round: String(r.round).split('-')[0], odd: Number(p.odd) || 0 })));
       const done = all.filter(p => p.outcome);
+      DONE = done;
       const unentered = all.length - done.length;
 
       const hit = done.filter(p => p.hit).length;
@@ -224,10 +317,10 @@ picks는 트래커 [전송] 때 자동 저장됨.
       document.getElementById('sCombo').textContent = combos.length ? `${cHit}/${combos.length}` : '-';
 
       const notes = [];
-      notes.push(`회차 ${withPicks.length}개 기준 · 표본 ${MIN_N}개 미만은 흐리게 표시 (운일 수 있음)`);
+      notes.push(`회차 ${withPicks.length}개 기준`);
       if (unentered) notes.push(`결과 미입력 픽 ${unentered}개는 통계에서 뺐어`);
       if (noPicks) notes.push(`경기 기록이 없는 예전 회차 ${noPicks}개는 빠져 있어 (과거 데이터 복구는 다음 단계)`);
-      notes.push('회수율 = 그 픽만 단폴로 샀다고 쳤을 때 돌아오는 돈 (100% 넘으면 이득)');
+      notes.push('처음이면 오른쪽 위 ❓ 먼저 봐줘 · 흰 눈금 = 본전선');
 
       if (!done.length) {
         body.innerHTML = `<div class="note">${notes.join('<br>')}</div><div class="empty">아직 통계 낼 기록이 없어<br>이제부터 트래커에서 <b>전송</b>하는 회차가 쌓여</div>`;
@@ -242,12 +335,27 @@ picks는 트래커 [전송] 때 자동 저장됨.
         return [...g.values()].sort((a, b) => parseInt(a.k) - parseInt(b.k));
       })();
 
+      // 최근 흐름: 최근 20픽 vs 전체 (회차 번호 + 경기 순서 기준)
+      const sorted = [...done].sort((a, b) => Number(a.round) - Number(b.round));
+      const last = sorted.slice(-20), xa = stat(done), xl = stat(last);
+      const ra = xa.hit / xa.n * 100, rl = xl.hit / xl.n * 100;
+      const roiL = last.reduce((s, p) => s + (p.hit ? p.odd : 0), 0) / last.length * 100;
+      const diff = rl - ra;
+      const recentHtml = `<div class="sec"><div class="sec-t">최근 흐름<span>최근 ${last.length}픽 vs 전체</span></div>
+        <div class="recent">
+          <div class="card"><div class="card-t">전체 적중률</div><div class="card-v">${ra.toFixed(0)}%</div></div>
+          <div class="card"><div class="card-t">최근 적중률</div><div class="card-v" style="color:${diff >= 0 ? '#34d399' : '#fb7185'}">${rl.toFixed(0)}% <span style="font-size:0.7rem">${diff >= 0 ? '▲' : '▼'}${Math.abs(diff).toFixed(0)}</span></div></div>
+          <div class="card"><div class="card-t">최근 회수율</div><div class="card-v" style="color:${roiL >= 100 ? '#34d399' : '#fb7185'}">${roiL.toFixed(0)}%</div></div>
+        </div>${diff <= -10 ? '<div class="chk-sum bad" style="margin-top:8px">⚠️ 최근 감이 평소보다 많이 떨어져 있어 · 금액 줄이기 추천</div>' : ''}</div>`;
+
       body.innerHTML = `<div class="note">${notes.join('<br>')}</div>` +
+        `<div class="sec" id="checker"></div>` + recentHtml +
         table('리그별', '', group(done, p => normLeague(p.league)), 'lg') +
         table('게임 유형별', '', group(done, p => normType(p.type), ['승무패', 'H-1', 'H+1', '언더오버']), 'tp') +
         table('배당 구간별', '2.0 아래 0.1 단위', group(done, p => fineBand(p.odd), FINE)) +
         table('픽 종류별', '유형 · 내 픽', group(done, p => `${normType(p.type)} · ${pickName(p)}`), 'pk') +
         table('조합 폴더 수별', '조합 단위 · 회수율 = 조합 배당 기준', comboGroups);
+      renderChecker();
     }
 
     async function load() {
