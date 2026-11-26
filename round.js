@@ -52,10 +52,14 @@ window.ROUNDS = [
       6: { odd: 27.1, betAmount: 10000 },
       7: { odd: 40.9, betAmount: 10000 },
       8: { odd: 25.4, betAmount: 10000 },
-      9: { odd: 78.0, betAmount: 10000 }
+      9: { odd: 78.0, betAmount: 10000 },
+      10: { odd: 18.9, betAmount: 10000 },
+      11: { odd: 24.2, betAmount: 15000 },
+      12: { odd: 39.0, betAmount: 10000 },
+      13: { odd: 23.6, betAmount: 15000 }
     },
 
-    // ※ 회차 중간 추가분은 기존 id(m1~m13) 유지 + 새 경기 m14~ (이미 입력한 결과 보존용)
+    // ※ 회차 중간 추가분은 기존 id(m1~m18) 유지 + 새 경기 m19~ (이미 입력한 결과 보존용)
     matches: [
       { id: "m14", time: "11.25 18:30", league: "일본 J2리그", type: "승무패", home: "반라우레 하치노헤FC", away: "알비렉스 니가타", pickTarget: "away", odd: "2.20", combs: [9] },
       { id: "m15", time: "11.25 18:30", league: "일본 J2리그", type: "H+1.0", home: "반라우레 하치노헤FC", away: "알비렉스 니가타", pickTarget: "away", odd: "4.95", combs: [8] },
@@ -74,7 +78,18 @@ window.ROUNDS = [
       { id: "m8", time: "11.26 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "번리", away: "버밍엄 시티", pickTarget: "away", odd: "2.23", combs: [1, 5, 6, 7] },
       { id: "m9", time: "11.26 05:00", league: "잉글랜드 챔피언십", type: "승무패", home: "스토크 시티", away: "밀월", pickTarget: "home", odd: "2.03", combs: [2, 7, 8] },
       { id: "m10", time: "11.26 05:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "스토크 시티", away: "밀월", pickTarget: "home", odd: "4.10", combs: [3, 4, 9] },
-      { id: "m11", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "1.87", combs: [1, 2] }
+      { id: "m19", time: "11.27 02:45", league: "컨퍼런스리그", type: "승무패", home: "파포스FC", away: "미트윌란", pickTarget: "away", odd: "2.00", combs: [10] },
+      { id: "m20", time: "11.27 02:45", league: "컨퍼런스리그", type: "H+1.0", home: "파포스FC", away: "미트윌란", pickTarget: "draw", odd: "3.80", combs: [12] },
+      { id: "m21", time: "11.27 02:45", league: "컨퍼런스리그", type: "H-1.0", home: "SK브란", away: "AGF오르후스", pickTarget: "home", odd: "3.45", combs: [10] },
+      { id: "m22", time: "11.27 02:45", league: "컨퍼런스리그", type: "승무패", home: "SK브란", away: "AGF오르후스", pickTarget: "home", odd: "1.90", combs: [11, 12, 13] },
+      { id: "m23", time: "11.27 02:45", league: "유로파리그", type: "승무패", home: "셀타 비고", away: "AFC본머스", pickTarget: "away", odd: "1.83", combs: [10, 11, 12] },
+      { id: "m24", time: "11.27 02:45", league: "유로파리그", type: "H-1.0", home: "올랭피크 마르세유", away: "레프스키 소피아", pickTarget: "home", odd: "1.96", combs: [11] },
+      { id: "m25", time: "11.27 02:45", league: "유로파리그", type: "승무패", home: "올림피아코스", away: "AC밀란", pickTarget: "away", odd: "2.21", combs: [13] },
+      { id: "m11", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "1.87", combs: [1, 2] },
+      { id: "m26", time: "11.27 05:00", league: "컨퍼런스리그", type: "U/O 3.5", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "1.49", combs: [10] },
+      { id: "m27", time: "11.27 05:00", league: "컨퍼런스리그", type: "H-1.0", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "2.95", combs: [12, 13] },
+      { id: "m28", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "SC프라이부르크", away: "트벤테", pickTarget: "draw", odd: "3.55", combs: [11] },
+      { id: "m29", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "하이두크 스플리트", away: "신트트라위던", pickTarget: "home", odd: "1.90", combs: [13] }
     ]
   }
 ];
