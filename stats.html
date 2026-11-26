@@ -51,10 +51,6 @@ picks는 트래커 [전송] 때 자동 저장됨.
     .drill-t { font-size: 0.68rem; color: #7d8590; margin: 4px 0 4px; }
     .drill .tr { font-size: 0.72rem; padding: 4px 0; }
     .drill .tr .nm { font-weight: normal; color: #cbd5e1; }
-    .odds { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .od { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    .od.h { background: #064e3b; color: #34d399; }
-    .od.m { background: #2a1720; color: #fb7185; opacity: 0.75; }
     .empty { text-align: center; color: #64748b; font-size: 0.85rem; padding: 40px 10px; line-height: 1.7; }
   </style>
 </head>
@@ -133,10 +129,13 @@ picks는 트래커 [전송] 때 자동 저장됨.
       return '3.0 이상';
     }
 
-    const FINE = ['1.6 미만', '1.6~1.8', '1.8~2.0', '2.0~2.5', '2.5~3.0', '3.0~4.0', '4.0 이상'];
+    // 펼침용 세부 구간 (2.0 아래는 0.1 단위, 위로 갈수록 넓게)
+    const FINE_EDGES = [1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.7, 3.0, 3.5, 4.0, 5.0];
+    const FINE = ['1.5 미만', ...FINE_EDGES.slice(1).map((e, i) => `${FINE_EDGES[i].toFixed(1)}~${e.toFixed(1)}`), '5.0 이상'];
     function fineBand(o) {
-      if (o < 1.6) return FINE[0]; if (o < 1.8) return FINE[1]; if (o < 2.0) return FINE[2];
-      if (o < 2.5) return FINE[3]; if (o < 3.0) return FINE[4]; if (o < 4.0) return FINE[5]; return FINE[6];
+      if (o < FINE_EDGES[0]) return FINE[0];
+      for (let i = 1; i < FINE_EDGES.length; i++) if (o < FINE_EDGES[i]) return FINE[i];
+      return FINE[FINE.length - 1];
     }
     let openKey = null;
     function toggleDrill(key) { openKey = openKey === key ? null : key; render(); }
@@ -181,14 +180,13 @@ picks는 트래커 [전송] 때 자동 저장됨.
     // 펼침: 그 항목 안에서 배당 구간별 + 실제 배당 목록(적중 초록 / 실패 빨강)
     function drillHtml(x) {
       const sub = group(x.items, p => fineBand(p.odd), FINE);
-      const list = [...x.items].sort((a, b) => a.odd - b.odd)
-        .map(p => `<span class="od ${p.hit ? 'h' : 'm'}" title="${p.round}회 ${p.home || ''} vs ${p.away || ''}">${p.odd.toFixed(2)}</span>`).join('');
-      return `<div class="drill"><div class="drill-t">배당 구간별</div>${sub.map(y => rowHtml(y)).join('')}
-        <div class="drill-t" style="margin-top:8px;">실제 배당 (초록 = 적중, 빨강 = 실패)</div><div class="odds">${list}</div></div>`;
+
+      return `<div class="drill"><div class="drill-t">세부 배당 구간별 (건 적 있는 구간만)</div>${sub.map(y => rowHtml(y)).join('')}
+        </div>`;
     }
     function table(title, sub, arr, id) {
       if (!arr.length) return '';
-      if (id) return `<div class="sec"><div class="sec-t">${title}<span>${sub ? sub + ' · ' : ''}눌러서 배당별 보기</span></div>
+      if (id) return `<div class="sec"><div class="sec-t">${title}<span>${sub ? sub + ' · ' : ''}눌러서 세부 배당 구간 보기</span></div>
         <div class="tr head"><span>구분</span><span>적중</span><span>적중률</span><span>평균배당</span><span>회수율</span></div>` +
         arr.map(x => { const key = id + '|' + x.k, op = openKey === key;
           return `<div onclick="toggleDrill('${key.replace(/'/g, "\\'")}')">${rowHtml(x, ' click' + (op ? ' open' : ''))}</div>${op ? drillHtml(x) : ''}`; }).join('') + '</div>';
