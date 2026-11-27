@@ -6,41 +6,6 @@
 // pickTarget: "home"(승) | "draw"(무) | "away"(패) / combs: 이 경기가 들어간 조합 번호들
 window.ROUNDS = [
   {
-    round: "139",
-
-    combos: {
-      1: { odd: 25.1, betAmount: 20000 },
-      2: { odd: 25.3, betAmount: 20000 },
-      3: { odd: 28.0, betAmount: 15000 },
-      4: { odd: 15.1, betAmount: 25000 },
-      5: { odd: 101.7, betAmount: 5000 },
-      6: { odd: 50.6, betAmount: 5000 },
-      7: { odd: 60.1, betAmount: 5000 },
-      8: { odd: 67.1, betAmount: 5000 }
-    },
-
-    // ※ 회차 중간 추가분은 기존 id(m1~m8) 유지 + 새 경기 m9~ (이미 입력한 결과 보존용)
-    matches: [
-      { id: "m1", time: "11.24 04:45", league: "세리에A", type: "승무패", home: "AC몬차", away: "피오렌티나", pickTarget: "home", odd: "3.15", combs: [3] },
-      { id: "m2", time: "11.24 05:00", league: "EPL", type: "승무패", home: "브렌트퍼드", away: "에버턴", pickTarget: "home", odd: "2.10", combs: [1, 2, 3, 4] },
-      { id: "m9", time: "11.24 19:00", league: "AFC 챔스 엘리트", type: "승무패", home: "교토 상가FC", away: "포항 스틸러스", pickTarget: "home", odd: "1.49", combs: [5] },
-      { id: "m10", time: "11.25 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "노리치 시티", away: "퀸즈파크 레인저스", pickTarget: "home", odd: "1.85", combs: [5, 6, 7, 8] },
-      { id: "m11", time: "11.25 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "브리스틀 시티", away: "렉섬", pickTarget: "away", odd: "2.45", combs: [6, 8] },
-      { id: "m12", time: "11.25 04:45", league: "잉글랜드 챔피언십", type: "H-1.0", home: "미들즈브러", away: "스완지 시티", pickTarget: "home", odd: "2.07", combs: [6, 8] },
-      { id: "m13", time: "11.25 04:45", league: "잉글랜드 챔피언십", type: "승무패", home: "포츠머스", away: "웨스트햄", pickTarget: "home", odd: "3.45", combs: [7] },
-      { id: "m3", time: "11.25 05:00", league: "챔피언스리그", type: "H-1.0", home: "RB라이프치히", away: "RC랑스", pickTarget: "home", odd: "1.81", combs: [1, 5] },
-      { id: "m4", time: "11.25 19:00", league: "일본 J1리그", type: "H+1.0", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "draw", odd: "3.55", combs: [1] },
-      { id: "m5", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "away", odd: "2.27", combs: [2, 3, 4, 5, 8] },
-      { id: "m14", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "미토 홀리호크", away: "도쿄 베르디", pickTarget: "draw", odd: "2.90", combs: [6] },
-      { id: "m6", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "제프 유나이티드", away: "나고야 그램퍼스", pickTarget: "home", odd: "2.85", combs: [2, 5, 7] },
-      { id: "m7", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "home", odd: "1.86", combs: [1, 2, 3, 4, 6] },
-      { id: "m15", time: "11.25 19:00", league: "일본 J1리그", type: "승무패", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "draw", odd: "3.15", combs: [5, 8] },
-      { id: "m16", time: "11.25 19:00", league: "일본 J1리그", type: "H-1.0", home: "파지아노 오카야마", away: "시미즈 에스펄스", pickTarget: "draw", odd: "3.30", combs: [7] },
-      { id: "m8", time: "11.25 19:30", league: "일본 J1리그", type: "승무패", home: "우라와 레드", away: "세레소 오사카", pickTarget: "home", odd: "1.70", combs: [4] }
-    ]
-  },
-
-  {
     round: "140",
 
     combos: {
@@ -90,6 +55,40 @@ window.ROUNDS = [
       { id: "m27", time: "11.27 05:00", league: "컨퍼런스리그", type: "H-1.0", home: "SC프라이부르크", away: "트벤테", pickTarget: "home", odd: "2.95", combs: [12, 13] },
       { id: "m28", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "SC프라이부르크", away: "트벤테", pickTarget: "draw", odd: "3.55", combs: [11] },
       { id: "m29", time: "11.27 05:00", league: "컨퍼런스리그", type: "승무패", home: "하이두크 스플리트", away: "신트트라위던", pickTarget: "home", odd: "1.90", combs: [13] }
+    ]
+  },
+
+  {
+    round: "141",
+
+    combos: {
+      1: { odd: 25.9, betAmount: 10000 },
+      2: { odd: 134.4, betAmount: 10000 },
+      3: { odd: 48.5, betAmount: 10000 },
+      4: { odd: 18.3, betAmount: 20000 },
+      5: { odd: 34.6, betAmount: 15000 },
+      6: { odd: 47.7, betAmount: 10000 },
+      7: { odd: 20.5, betAmount: 15000 }
+    },
+
+    matches: [
+      { id: "m1", time: "11.27 17:40", league: "호주 A리그", type: "승무패", home: "맥아서FC", away: "멜버른 시티", pickTarget: "home", odd: "2.70", combs: [1, 2] },
+      { id: "m2", time: "11.28 04:30", league: "독일 분데스리가", type: "H-1.0", home: "베르더 브레멘", away: "묀헨글라트바흐", pickTarget: "home", odd: "2.55", combs: [1, 3, 7] },
+      { id: "m3", time: "11.28 04:30", league: "독일 분데스리가", type: "승무패", home: "베르더 브레멘", away: "묀헨글라트바흐", pickTarget: "home", odd: "1.56", combs: [2, 4] },
+      { id: "m4", time: "11.28 04:30", league: "독일 분데스리가", type: "H-2.0", home: "베르더 브레멘", away: "묀헨글라트바흐", pickTarget: "home", odd: "4.65", combs: [6] },
+      { id: "m5", time: "11.28 04:45", league: "이탈리아 세리에A", type: "승무패", home: "베네치아", away: "볼로냐", pickTarget: "away", odd: "2.00", combs: [1, 3, 4, 6, 7] },
+      { id: "m6", time: "11.28 04:45", league: "이탈리아 세리에A", type: "H+1.0", home: "베네치아", away: "볼로냐", pickTarget: "draw", odd: "3.45", combs: [2] },
+      { id: "m7", time: "11.28 04:45", league: "프랑스 리그1", type: "승무패", home: "스타드 브레스투아29", away: "파리FC", pickTarget: "away", odd: "1.95", combs: [2, 3, 4] },
+      { id: "m8", time: "11.28 10:00", league: "미국 메이저리그사커", type: "승무패", home: "콜럼버스 크루", away: "인터 마이애미CF", pickTarget: "home", odd: "2.30", combs: [3, 6] },
+      { id: "m9", time: "11.28 12:00", league: "미국 메이저리그사커", type: "승무패", home: "레알 솔트레이크", away: "밴쿠버 화이트캡스", pickTarget: "away", odd: "2.12", combs: [3] },
+      { id: "m10", time: "11.28 14:00", league: "일본 J1리그", type: "승무패", home: "교토 상가FC", away: "세레소 오사카", pickTarget: "home", odd: "2.23", combs: [5, 6, 7] },
+      { id: "m11", time: "11.28 14:00", league: "K리그2", type: "승무패", home: "용인FC", away: "파주 프런티어", pickTarget: "home", odd: "1.80", combs: [7] },
+      { id: "m12", time: "11.28 21:30", league: "잉글랜드 챔피언십", type: "승무패", home: "블랙번 로버스", away: "찰턴 애슬레틱", pickTarget: "home", odd: "1.88", combs: [1] },
+      { id: "m13", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "2.28", combs: [2] },
+      { id: "m14", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "1.44", combs: [4] },
+      { id: "m15", time: "11.29 04:45", league: "프랑스 리그1", type: "H+1.0", home: "르망FC", away: "릴OSC", pickTarget: "draw", odd: "3.30", combs: [5] },
+      { id: "m16", time: "11.30 01:15", league: "프랑스 리그1", type: "승무패", home: "툴루즈", away: "스타드 렌", pickTarget: "home", odd: "2.26", combs: [5] },
+      { id: "m17", time: "11.30 04:45", league: "프랑스 리그1", type: "승무패", home: "올랭피크 리옹", away: "AS모나코", pickTarget: "home", odd: "2.08", combs: [2, 4, 5] }
     ]
   }
 ];
