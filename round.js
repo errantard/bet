@@ -68,9 +68,11 @@ window.ROUNDS = [
       4: { odd: 18.3, betAmount: 20000 },
       5: { odd: 34.6, betAmount: 15000 },
       6: { odd: 47.7, betAmount: 10000 },
-      7: { odd: 20.5, betAmount: 15000 }
+      7: { odd: 20.5, betAmount: 15000 },
+      8: { odd: 83.0, betAmount: 10000 }
     },
 
+    // ※ 회차 중간 추가분은 기존 id(m1~m17) 유지 + 새 경기 m18~ (이미 입력한 결과 보존용)
     matches: [
       { id: "m1", time: "11.27 17:40", league: "호주 A리그", type: "승무패", home: "맥아서FC", away: "멜버른 시티", pickTarget: "home", odd: "2.70", combs: [1, 2] },
       { id: "m2", time: "11.28 04:30", league: "독일 분데스리가", type: "H-1.0", home: "베르더 브레멘", away: "묀헨글라트바흐", pickTarget: "home", odd: "2.55", combs: [1, 3, 7] },
@@ -81,8 +83,11 @@ window.ROUNDS = [
       { id: "m7", time: "11.28 04:45", league: "프랑스 리그1", type: "승무패", home: "스타드 브레스투아29", away: "파리FC", pickTarget: "away", odd: "1.95", combs: [2, 3, 4] },
       { id: "m8", time: "11.28 10:00", league: "미국 메이저리그사커", type: "승무패", home: "콜럼버스 크루", away: "인터 마이애미CF", pickTarget: "home", odd: "2.30", combs: [3, 6] },
       { id: "m9", time: "11.28 12:00", league: "미국 메이저리그사커", type: "승무패", home: "레알 솔트레이크", away: "밴쿠버 화이트캡스", pickTarget: "away", odd: "2.12", combs: [3] },
-      { id: "m10", time: "11.28 14:00", league: "일본 J1리그", type: "승무패", home: "교토 상가FC", away: "세레소 오사카", pickTarget: "home", odd: "2.23", combs: [5, 6, 7] },
+      { id: "m10", time: "11.28 14:00", league: "일본 J1리그", type: "승무패", home: "교토 상가FC", away: "세레소 오사카", pickTarget: "home", odd: "2.23", combs: [5, 6, 7, 8] },
       { id: "m11", time: "11.28 14:00", league: "K리그2", type: "승무패", home: "용인FC", away: "파주 프런티어", pickTarget: "home", odd: "1.80", combs: [7] },
+      { id: "m18", time: "11.28 14:00", league: "일본 J1리그", type: "H+1.0", home: "시미즈 에스펄스", away: "우라와 레드", pickTarget: "draw", odd: "3.30", combs: [8] },
+      { id: "m19", time: "11.28 14:00", league: "일본 J2리그", type: "H-1.0", home: "RB오미야 아르디자", away: "FC이마바리", pickTarget: "home", odd: "2.40", combs: [8] },
+      { id: "m20", time: "11.28 15:00", league: "일본 J1리그", type: "승무패", home: "비셀 고베", away: "제프 유나이티드", pickTarget: "away", odd: "4.70", combs: [8] },
       { id: "m12", time: "11.28 21:30", league: "잉글랜드 챔피언십", type: "승무패", home: "블랙번 로버스", away: "찰턴 애슬레틱", pickTarget: "home", odd: "1.88", combs: [1] },
       { id: "m13", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "2.28", combs: [2] },
       { id: "m14", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "1.44", combs: [4] },
