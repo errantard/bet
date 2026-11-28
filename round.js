@@ -75,10 +75,13 @@ window.ROUNDS = [
       11: { odd: 36.8, betAmount: 15000 },
       12: { odd: 43.9, betAmount: 10000 },
       13: { odd: 35.8, betAmount: 10000 },
-      14: { odd: 52.6, betAmount: 10000 }
+      14: { odd: 52.6, betAmount: 10000 },
+      15: { odd: 41.1, betAmount: 10000 },
+      16: { odd: 16.5, betAmount: 10000 },
+      17: { odd: 126.2, betAmount: 10000 }
     },
 
-    // ※ 회차 중간 추가분은 기존 id(m1~m20) 유지 + 새 경기 m21~ (이미 입력한 결과 보존용)
+    // ※ 회차 중간 추가분은 기존 id(m1~m28) 유지 + 새 경기 m29~ (이미 입력한 결과 보존용)
     matches: [
       { id: "m1", time: "11.27 17:40", league: "호주 A리그", type: "승무패", home: "맥아서FC", away: "멜버른 시티", pickTarget: "home", odd: "2.70", combs: [1, 2] },
       { id: "m2", time: "11.28 04:30", league: "독일 분데스리가", type: "H-1.0", home: "베르더 브레멘", away: "묀헨글라트바흐", pickTarget: "home", odd: "2.55", combs: [1, 3, 7] },
@@ -96,16 +99,19 @@ window.ROUNDS = [
       { id: "m19", time: "11.28 14:00", league: "일본 J2리그", type: "H-1.0", home: "RB오미야 아르디자", away: "FC이마바리", pickTarget: "home", odd: "2.40", combs: [8] },
       { id: "m20", time: "11.28 15:00", league: "일본 J1리그", type: "승무패", home: "비셀 고베", away: "제프 유나이티드", pickTarget: "away", odd: "4.70", combs: [8] },
       { id: "m22", time: "11.28 15:00", league: "일본 J1리그", type: "H-1.0", home: "비셀 고베", away: "제프 유나이티드", pickTarget: "away", odd: "2.26", combs: [14] },
-      { id: "m12", time: "11.28 21:30", league: "잉글랜드 챔피언십", type: "승무패", home: "블랙번 로버스", away: "찰턴 애슬레틱", pickTarget: "home", odd: "1.88", combs: [1, 13] },
+      { id: "m12", time: "11.28 21:30", league: "잉글랜드 챔피언십", type: "승무패", home: "블랙번 로버스", away: "찰턴 애슬레틱", pickTarget: "home", odd: "1.88", combs: [1, 13, 16, 17] },
       { id: "m23", time: "11.28 21:30", league: "잉글랜드 챔피언십", type: "H+1.0", home: "프레스턴 노스엔드", away: "노리치 시티", pickTarget: "away", odd: "2.60", combs: [14] },
-      { id: "m13", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "2.28", combs: [2, 10, 11, 13] },
+      { id: "m13", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "H-1.0", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "2.28", combs: [2, 10, 11, 13, 17] },
       { id: "m14", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "버밍엄 시티", away: "볼턴 원더러스", pickTarget: "home", odd: "1.44", combs: [4, 12] },
       { id: "m24", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "퀸즈파크 레인저스", away: "셰필드 유나이티드", pickTarget: "home", odd: "1.85", combs: [9] },
-      { id: "m25", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "웨스트햄 유나이티드", away: "스토크 시티", pickTarget: "away", odd: "4.05", combs: [9] },
-      { id: "m15", time: "11.29 04:45", league: "프랑스 리그1", type: "H+1.0", home: "르망FC", away: "릴OSC", pickTarget: "draw", odd: "3.30", combs: [5] },
-      { id: "m26", time: "11.29 23:05", league: "잉글랜드 프리미어리그", type: "승무패", home: "풀럼", away: "AFC본머스", pickTarget: "away", odd: "2.30", combs: [10] },
+      { id: "m25", time: "11.29 00:00", league: "잉글랜드 챔피언십", type: "승무패", home: "웨스트햄 유나이티드", away: "스토크 시티", pickTarget: "away", odd: "4.05", combs: [9, 17] },
+      { id: "m30", time: "11.29 01:15", league: "프랑스 리그1", type: "H+1.0", home: "앙제SCO", away: "RC랑스", pickTarget: "draw", odd: "3.35", combs: [17] },
+      { id: "m15", time: "11.29 04:45", league: "프랑스 리그1", type: "H+1.0", home: "르망FC", away: "릴OSC", pickTarget: "draw", odd: "3.30", combs: [5, 15] },
+      { id: "m29", time: "11.29 04:45", league: "프랑스 리그1", type: "승무패", home: "르망FC", away: "릴OSC", pickTarget: "away", odd: "1.83", combs: [16] },
+      { id: "m31", time: "11.29 22:30", league: "네덜란드 에레디비시", type: "승무패", home: "페예노르트", away: "AFC아약스", pickTarget: "away", odd: "2.60", combs: [15] },
+      { id: "m26", time: "11.29 23:05", league: "잉글랜드 프리미어리그", type: "승무패", home: "풀럼", away: "AFC본머스", pickTarget: "away", odd: "2.30", combs: [10, 15, 16, 17] },
       { id: "m16", time: "11.30 01:15", league: "프랑스 리그1", type: "승무패", home: "툴루즈", away: "스타드 렌", pickTarget: "home", odd: "2.26", combs: [5] },
-      { id: "m17", time: "11.30 04:45", league: "프랑스 리그1", type: "승무패", home: "올랭피크 리옹", away: "AS모나코", pickTarget: "home", odd: "2.08", combs: [2, 4, 5, 9, 11, 12, 13, 14] },
+      { id: "m17", time: "11.30 04:45", league: "프랑스 리그1", type: "승무패", home: "올랭피크 리옹", away: "AS모나코", pickTarget: "home", odd: "2.08", combs: [2, 4, 5, 9, 11, 12, 13, 14, 15, 16] },
       { id: "m27", time: "11.30 04:45", league: "프랑스 리그1", type: "H-1.0", home: "올랭피크 리옹", away: "AS모나코", pickTarget: "draw", odd: "3.60", combs: [10] },
       { id: "m28", time: "11.30 05:00", league: "스페인 라리가", type: "승무패", home: "레알 소시에다드", away: "세비야", pickTarget: "home", odd: "1.93", combs: [9, 10, 11, 12, 14] }
     ]
