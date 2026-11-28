@@ -78,7 +78,7 @@
     }
 
     /* 회차 제목 클릭 → 조합별 배팅금액 + 총배팅금액 */
-    .total-panel { margin-top: 10px; background: #111a2e; border: 1px solid #233659; border-radius: 8px; padding: 8px 12px; animation: slideDown 0.22s ease-out; }
+    .total-panel { max-height: 45vh; max-height: 45dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; margin-top: 10px; background: #111a2e; border: 1px solid #233659; border-radius: 8px; padding: 8px 12px; animation: slideDown 0.22s ease-out; }
     .total-row { display: grid; grid-template-columns: 1fr 0.8fr 1.1fr 1.3fr; gap: 6px; align-items: center; font-size: 0.78rem; padding: 4px 0; border-bottom: 1px solid #1a253c; color: #cbd5e1; }
     .total-row.head { color: #7d8590; font-size: 0.68rem; }
     .total-row span:not(:first-child) { text-align: right; }
